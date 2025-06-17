@@ -51,7 +51,7 @@
 
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia MIT. Consulta el archivo LICENSE para más detalles.
+Este proyecto es software propietario. Queda prohibida la copia, distribución o uso del código fuente, en total o en parte, sin autorización expresa del autor.
 
 ---
 
@@ -114,7 +114,7 @@ Contributions are welcome! If you have ideas, improvements, or find bugs, open a
 
 ## 📄 License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+This project is proprietary software. Copying, distribution, or use of the source code, in whole or in part, is prohibited without the express permission of the author.
 
 ---
 
