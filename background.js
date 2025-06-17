@@ -111,10 +111,10 @@ async function extractProductInfoInPage() {
       ".product-form__inventory",
       ".inventory-status",
       ".product-add-to-cart__text",
-      ".ui-pdp-buybox__quantity", // Mercado Libre
-      ".ui-pdp-action-modal__info--available", // Mercado Libre
-      ".ui-pdp-action-modal__info--out-of-stock", // Mercado Libre
-      ".andes-tooltip__box--availability-in-stock", // Mercado Libre
+      ".ui-pdp-buybox__quantity",
+      ".ui-pdp-action-modal__info--available",
+      ".ui-pdp-action-modal__info--out-of-stock",
+      ".andes-tooltip__box--availability-in-stock",
       ".andes-tooltip__box--availability-out-of-stock",
       ".stock-message",
       ".stock__available",
@@ -167,7 +167,36 @@ async function extractProductInfoInPage() {
       "out-of-stock",
       "agotados",
       "no en stock",
+      "no tenemos más stock",
+      "uy! no tenemos más stock",
+      "no hay más stock",
+      "no hay unidades disponibles",
+      "producto sin stock",
+      "sin existencias",
+      "no queda stock",
     ];
+
+    // --- Detección prioritaria de botones deshabilitados con texto de sin stock ---
+    const potentialBuyButtons = document.querySelectorAll(
+      'button, a[role="button"], input[type="submit"], [data-testid*="add-to-cart"], [class*="add-to-cart"], [class*="buy-button"], .andes-button--loud'
+    );
+    for (const button of potentialBuyButtons) {
+      const buttonText = (button.value || button.textContent || "")
+        .trim()
+        .toLowerCase();
+      const buttonClasses = button.className
+        ? button.className.toLowerCase()
+        : "";
+      if (
+        (button.disabled ||
+          button.hasAttribute("disabled") ||
+          buttonClasses.includes("nostock")) &&
+        outOfStockKeywords.some((keyword) => buttonText.includes(keyword))
+      ) {
+        return "Out of stock";
+      }
+    }
+    // --- Fin de la detección prioritaria ---
 
     for (const selector of selectors) {
       const element = document.querySelector(selector);
@@ -175,28 +204,20 @@ async function extractProductInfoInPage() {
         const text = (element.content || element.textContent || "")
           .trim()
           .toLowerCase();
-        console.log(
-          `content.js: Probando selector de disponibilidad: ${selector}, Texto encontrado: ${text}`
-        );
         if (inStockKeywords.some((keyword) => text.includes(keyword))) {
-          console.log(`content.js: Disponibilidad explícita: In stock`);
           return "In stock";
         }
         if (outOfStockKeywords.some((keyword) => text.includes(keyword))) {
-          console.log(`content.js: Disponibilidad explícita: Out of stock`);
           return "Out of stock";
         }
       }
     }
 
     const bodyText = document.body.textContent.toLowerCase();
-    console.log("content.js: Buscando palabras clave en el texto del cuerpo.");
     if (inStockKeywords.some((keyword) => bodyText.includes(keyword))) {
-      console.log(`content.js: Disponibilidad implícita (body): In stock`);
       return "In stock";
     }
     if (outOfStockKeywords.some((keyword) => bodyText.includes(keyword))) {
-      console.log(`content.js: Disponibilidad implícita (body): Out of stock`);
       return "Out of stock";
     }
     return null;
@@ -224,13 +245,9 @@ async function extractProductInfoInPage() {
 
     let foundActiveBuyButton = false;
     for (const button of potentialBuyButtons) {
-      const buttonText = button.textContent.trim().toLowerCase();
-      console.log(
-        `content.js: Probando botón de compra: ${button.outerHTML.substring(
-          0,
-          50
-        )}... Texto: ${buttonText}`
-      );
+      const buttonText = (button.value || button.textContent || "")
+        .trim()
+        .toLowerCase();
       if (buyButtonKeywords.some((keyword) => buttonText.includes(keyword))) {
         if (
           !button.disabled &&
@@ -239,7 +256,6 @@ async function extractProductInfoInPage() {
           button.offsetParent !== null
         ) {
           foundActiveBuyButton = true;
-          console.log(`content.js: Botón de compra activo encontrado.`);
           break;
         }
       }
@@ -248,9 +264,6 @@ async function extractProductInfoInPage() {
       availability = "In stock";
     } else {
       availability = "Out of stock";
-      console.log(
-        `content.js: No se encontró botón de compra activo o indicador explícito, asumiendo: Out of stock.`
-      );
     }
   }
 
@@ -338,62 +351,50 @@ const observeDOMChanges = (timeout = 20000) => {
 
 // Lógica principal de background.js
 const checkProduct = async (product) => {
+  let tabId;
+  let tabCreated = false;
   try {
-    let tabId;
-    const existingTabs = await chrome.tabs.query({ url: product.url });
-    let tabFound = false;
+    const newTab = await chrome.tabs.create({
+      url: product.url,
+      active: false,
+    });
+    tabId = newTab.id;
+    tabCreated = true;
 
-    if (existingTabs.length > 0) {
-      tabId = existingTabs[0].id;
-      await chrome.tabs.update(tabId, { active: false });
-      tabFound = true;
-      console.log(
-        `background.js: Usando pestaña existente para ${product.url}, tabId: ${tabId}`
-      );
-    } else {
-      const newTab = await chrome.tabs.create({
-        url: product.url,
-        active: false,
-      });
-      tabId = newTab.id;
-      console.log(
-        `background.js: Creando nueva pestaña para ${product.url}, tabId: ${tabId}`
-      );
-    }
-
-    // Wait for the tab to be fully loaded
     await new Promise((resolve) => {
-      const listener = (tabIdUpdated, changeInfo, tab) => {
-        if (tabIdUpdated === tabId && changeInfo.status === "complete") {
+      let resolved = false;
+      const timeout = setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
           chrome.tabs.onUpdated.removeListener(listener);
-          console.log(`background.js: Pestaña ${tabId} cargada completamente.`);
           resolve();
+        }
+      }, 20000);
+
+      const listener = (tabIdUpdated, changeInfo) => {
+        if (tabIdUpdated === tabId && changeInfo.status === "complete") {
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timeout);
+            chrome.tabs.onUpdated.removeListener(listener);
+            resolve();
+          }
         }
       };
       chrome.tabs.onUpdated.addListener(listener);
     });
 
-    console.log(
-      `background.js: Intentando ejecutar función de extracción en tabId: ${tabId}`
-    );
     const [result] = await chrome.scripting.executeScript({
       target: { tabId: tabId },
-      function: extractProductInfoInPage, // Ejecutar la función directamente
+      function: extractProductInfoInPage,
     });
-    console.log(
-      `background.js: Función de extracción ejecutada con éxito en tabId: ${tabId}`
-    );
 
     const productInfo = result && result.result;
 
     if (productInfo) {
       const { price, title, availability } = productInfo;
       let notificationMessage = null;
-      console.log(
-        `background.js: Información recibida para ${product.url}: Precio: ${price}, Disponibilidad: ${availability}`
-      );
 
-      // Check for price change
       if (price !== null && price !== product.price) {
         const oldPrice = product.price;
         product.price = price;
@@ -402,14 +403,8 @@ const checkProduct = async (product) => {
         } ha cambiado de precio: de ${
           oldPrice ? `$${oldPrice.toFixed(2)}` : "desconocido"
         } a $${price.toFixed(2)}`;
-        console.log(
-          `Precio actualizado para ${
-            title || product.name || product.url
-          }: de ${oldPrice} a ${price}`
-        );
       }
 
-      // Check for availability change
       if (availability && availability !== product.availability) {
         const oldAvailability = product.availability;
         product.availability = availability;
@@ -424,14 +419,8 @@ const checkProduct = async (product) => {
             oldAvailability || "desconocido"
           } a ${availability}`;
         }
-        console.log(
-          `Disponibilidad actualizada para ${
-            title || product.name || product.url
-          }: de ${oldAvailability} a ${availability}`
-        );
       }
 
-      // Update product name if not set initially and title is available
       if (title && !product.name) {
         product.name = title;
       }
@@ -446,23 +435,15 @@ const checkProduct = async (product) => {
           message: notificationMessage,
           priority: 2,
         });
+        sendTelegramMessage(notificationMessage);
       }
-    } else {
-      console.warn(
-        `background.js: No se recibió información del producto para ${product.url}.`
-      );
-    }
-    // Only remove the tab if it was created by the extension for checking
-    if (!tabFound && tabId !== undefined) {
-      console.log(
-        `background.js: Cerrando pestaña creada para verificación: ${tabId}`
-      );
-      await chrome.tabs.remove(tabId);
     }
   } catch (error) {
-    console.error(`background.js: Error al verificar ${product.url}:`, error);
-    // Update lastChecked even if there was an error, to avoid re-checking too soon
     product.lastChecked = Date.now();
+  } finally {
+    if (tabCreated && tabId !== undefined) {
+      await chrome.tabs.remove(tabId);
+    }
   }
 };
 
