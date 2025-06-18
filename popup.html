@@ -1,58 +1,54 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monitor de Productos</title>
-  <link rel="stylesheet" href="popup.css">
-</head>
-<body>
-  <div class="container">
-    <header class="header">
-      <h1 class="title">Monitor de Productos</h1>
-    </header>
-    
-    <section class="add-form">
-      <div class="input-group">
-        <input 
-          type="url" 
-          id="productUrl" 
-          placeholder="URL del producto"
-          required
-        >
-        <button type="button" class="current-page" id="useCurrentPage">
-          Usar página actual
-        </button>
-      </div>
-      
-      <div class="input-group">
-        <input 
-          type="text" 
-          id="productName" 
-          placeholder="Nombre (opcional)"
-        >
-      </div>
-      
-      <button type="button" class="add-btn" id="addProduct">
-        Agregar
-      </button>
-    </section>
-    
-    <section class="products-list">
-      <div class="products-header">
-        <span class="products-count" id="productCount">0 productos</span>
-      </div>
-      
-      <div class="products-container" id="productsList">
-        <div class="empty-state" id="emptyState">
-          <p>No hay productos monitoreados</p>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Monitor de Productos</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1 class="title">Monitor de Productos</h1>
+      </header>
+
+      <section class="add-form">
+        <div class="input-group">
+          <input
+            type="url"
+            id="productUrl"
+            placeholder="URL del producto"
+            required
+          />
+          <button type="button" class="current-page" id="useCurrentPage">
+            Usar página actual
+          </button>
         </div>
-      </div>
-    </section>
-    
-    <div class="status" id="status" aria-live="polite"></div>
-  </div>
-  
-  <script src="popup.js"></script>
-</body>
+
+        <div class="input-group">
+          <input type="text" id="productName" placeholder="Nombre (opcional)" />
+        </div>
+
+        <button type="button" class="add-btn" id="addProduct">Agregar</button>
+      </section>
+
+      <section class="products-list">
+        <div class="products-header">
+          <span class="products-count" id="productCount">0 productos</span>
+        </div>
+
+        <div class="products-container" id="productsList">
+          <div class="empty-state" id="emptyState">
+            <p>No hay productos monitoreados</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="status" id="status" aria-live="polite"></div>
+    </div>
+
+    <div id="verifying-overlay" class="hidden">Verificando productos...</div>
+
+    <script src="popup.js"></script>
+  </body>
 </html>

@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const productCountSpan = document.getElementById("productCount");
   const emptyStateDiv = document.getElementById("emptyState");
   const statusDiv = document.getElementById("status");
+  const verifyingOverlay = document.getElementById("verifying-overlay");
 
   // Load existing products
   const loadProducts = async () => {
@@ -84,6 +85,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Mostrar spinner de verificación
+  const setVerifying = (verifying) => {
+    if (verifying) {
+      verifyingOverlay.classList.remove("hidden");
+      addProductBtn.disabled = true;
+      useCurrentPageBtn.disabled = true;
+    } else {
+      verifyingOverlay.classList.add("hidden");
+      addProductBtn.disabled = false;
+      useCurrentPageBtn.disabled = false;
+    }
+  };
+
   // Add product
   addProductBtn.addEventListener("click", async () => {
     const url = productUrlInput.value.trim();
@@ -108,6 +122,21 @@ document.addEventListener("DOMContentLoaded", () => {
     productUrlInput.value = "";
     productNameInput.value = "";
     showStatus("Producto agregado correctamente", "success");
+
+    // Mostrar spinner y pedir verificación inmediata
+    setVerifying(true);
+    chrome.runtime.sendMessage(
+      { action: "checkAllProductsNow" },
+      (response) => {
+        setVerifying(false);
+        loadProducts();
+        if (response && response.success) {
+          showStatus("Verificación completada", "success");
+        } else {
+          showStatus("Error al verificar productos", "error");
+        }
+      }
+    );
   });
 
   // Remove product
