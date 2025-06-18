@@ -460,3 +460,12 @@ const checkAllProducts = async () => {
   // Save any updates to lastChecked or names that might have occurred without a price change
   await chrome.storage.sync.set({ products });
 };
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "checkAllProductsNow") {
+    checkAllProducts().then(() => {
+      sendResponse({ success: true });
+    });
+    return true;
+  }
+});
