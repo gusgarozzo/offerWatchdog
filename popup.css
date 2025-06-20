@@ -40,15 +40,45 @@ body {
 
 /* Header */
 .header {
-  text-align: center;
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: 0;
+}
+
+.title-wrapper {
+  position: relative;
+  margin-bottom: var(--spacing-sm);
+  height: 32px;
 }
 
 .title {
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.01em;
+  margin: 0;
+  text-align: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
 }
+
+.settings-icon {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(10%);
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+  padding: 0;
+}
+
+.settings-icon:hover {
+  color: var(--primary);
+}
+
 
 /* Formulario */
 .add-form {
@@ -293,3 +323,39 @@ input::placeholder {
   max-height: 500px;
   transition: max-height 0.3s ease;
 }
+
+.config-section {
+  margin-top: 0;
+}
+
+.toggle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.arrow {
+  font-size: 12px;
+  user-select: none;
+}
+
+.settings-section {
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  overflow: hidden;
+}
+
+.settings-section.collapsed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.settings-section.expanded {
+  max-height: 200px;
+  opacity: 1;
+}
+

@@ -46,6 +46,17 @@ A partir de la versión actual, la sección para agregar productos fue optimizad
 - Se puede desplegar fácilmente haciendo clic en la fila **"Agregar producto ▼"**.
 - Esto permite una vista más limpia cuando solo se desea revisar los productos monitoreados, sin agregar nuevos.
 
+### 🆕 Mejora: Configuración de intervalo de verificación
+(2025-06-19)
+Se incorporó una nueva sección de configuración accesible desde el ícono de engranaje (⚙️) junto al título. Esta funcionalidad permite al usuario elegir cada cuánto tiempo se verifica automáticamente el precio y disponibilidad de los productos.
+
+El intervalo puede ser de 15, 30 o 60 minutos.
+
+Si no se elige manualmente, por defecto se aplicará un valor de 60 minutos.
+
+Cualquier cambio se guarda automáticamente y se aplica sin necesidad de recargar la extensión.
+
+Esta configuración ayuda a personalizar el comportamiento del monitoreo según la necesidad del usuario.
 
 ## 🤝 Contribución
 
