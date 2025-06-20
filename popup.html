@@ -9,9 +9,25 @@
   <body>
     <div class="container">
       <header class="header">
-        <h1 class="title">Monitor de Productos</h1>
+        <div class="header">
+          <div class="title-wrapper">
+            <h1 class="title">Monitor de Productos</h1>
+            <button id="settingsBtn" class="settings-icon" title="Configuración">⚙️</button>
+          </div>
+        </div>
       </header>
 
+  <section class="config-section">
+    <div class="settings-section collapsed" id="configForm">
+      <label for="intervalSelect">Intervalo de verificación:</label>
+      <select id="intervalSelect">
+        <option value="15">Cada 15 minutos</option>
+        <option value="30">Cada 30 minutos</option>
+        <option value="60">Cada 60 minutos</option>
+      </select>
+    </div>
+  </section>
+  
   <section class="add-section">
     <div class="toggle-header" id="toggleAddForm">
       <span>Agregar producto</span>

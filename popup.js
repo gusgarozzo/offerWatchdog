@@ -11,6 +11,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const toggleBtn = document.getElementById("toggleAddForm");
   const addForm = document.getElementById("addForm");
   const arrow = document.getElementById("toggleArrow");
+  const settingsBtn = document.getElementById("settingsBtn");
+  const configForm = document.getElementById("configForm");
+  const intervalSelect = document.getElementById("intervalSelect");
 
   toggleBtn.addEventListener("click", () => {
     const expanded = addForm.classList.toggle("expanded");
@@ -18,15 +21,29 @@ document.addEventListener("DOMContentLoaded", () => {
     arrow.textContent = expanded ? "▲" : "▼";
   });
 
+  settingsBtn.addEventListener("click", () => {
+    const expanded = configForm.classList.toggle("expanded");
+    configForm.classList.toggle("collapsed", !expanded);
+  });
 
-  // Load existing products
+  chrome.storage.sync.get("intervalMinutes", (data) => {
+    const current = data.intervalMinutes ?? 60;
+    intervalSelect.value = current.toString();
+  });
+
+  intervalSelect.addEventListener("change", (e) => {
+    const newValue = parseInt(e.target.value, 10);
+    chrome.storage.sync.set({ intervalMinutes: newValue }, () => {
+      chrome.runtime.sendMessage({ action: "updateInterval", interval: newValue });
+    });
+  });
+
   const loadProducts = async () => {
     const { products } = await chrome.storage.sync.get("products");
     const storedProducts = products || [];
     renderProducts(storedProducts);
   };
 
-  // Render products to the UI
   const renderProducts = (products) => {
     productsListDiv.innerHTML = "";
     if (products.length === 0) {
@@ -36,9 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     emptyStateDiv.style.display = "none";
-    productCountSpan.textContent = `${products.length} producto${
-      products.length !== 1 ? "s" : ""
-    }`;
+    productCountSpan.textContent = `${products.length} producto${products.length !== 1 ? "s" : ""}`;
 
     products.forEach((product, index) => {
       const productItem = document.createElement("div");
@@ -49,18 +64,14 @@ document.addEventListener("DOMContentLoaded", () => {
       productItem.innerHTML = `
         <div class="product-info">
           <div class="product-name">${product.name || "Sin nombre"}</div>
-          <a href="${product.url}" target="_blank" class="product-url">${
-        product.url
-      }</a>
+          <a href="${product.url}" target="_blank" class="product-url">${product.url}</a>
           <div class="product-price">${
             product.price
               ? `Precio: $${product.price.toLocaleString("es-AR", { minimumFractionDigits: 2 })}`
               : "Precio no disponible"
           }</div>
           <div class="product-last-checked">Última verificación: ${lastCheckedDate}</div>
-          <div class="product-availability">Disponibilidad: ${
-            product.availability || "Desconocida"
-          }</div>
+          <div class="product-availability">Disponibilidad: ${product.availability || "Desconocida"}</div>
         </div>
         <button class="remove-btn" data-index="${index}">Eliminar</button>
       `;
@@ -72,7 +83,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  // Show status message
   const showStatus = (message, type) => {
     statusDiv.textContent = message;
     statusDiv.className = `status show ${type}`;
@@ -81,12 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 3000);
   };
 
-  // Use current page URL
   useCurrentPageBtn.addEventListener("click", async () => {
-    const [tab] = await chrome.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab && tab.url) {
       productUrlInput.value = tab.url;
       showStatus("URL de la página actual cargada", "success");
@@ -95,7 +101,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Mostrar spinner de verificación
   const setVerifying = (verifying) => {
     if (verifying) {
       verifyingOverlay.classList.remove("hidden");
@@ -108,7 +113,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // Add product
   addProductBtn.addEventListener("click", async () => {
     const url = productUrlInput.value.trim();
     const name = productNameInput.value.trim();
@@ -133,23 +137,18 @@ document.addEventListener("DOMContentLoaded", () => {
     productNameInput.value = "";
     showStatus("Producto agregado correctamente", "success");
 
-    // Mostrar spinner y pedir verificación inmediata
     setVerifying(true);
-    chrome.runtime.sendMessage(
-      { action: "checkAllProductsNow" },
-      (response) => {
-        setVerifying(false);
-        loadProducts();
-        if (response && response.success) {
-          showStatus("Verificación completada", "success");
-        } else {
-          showStatus("Error al verificar productos", "error");
-        }
+    chrome.runtime.sendMessage({ action: "checkAllProductsNow" }, (response) => {
+      setVerifying(false);
+      loadProducts();
+      if (response && response.success) {
+        showStatus("Verificación completada", "success");
+      } else {
+        showStatus("Error al verificar productos", "error");
       }
-    );
+    });
   });
 
-  // Remove product
   const handleRemoveProduct = async (event) => {
     const index = parseInt(event.target.dataset.index);
     let { products } = await chrome.storage.sync.get("products");
