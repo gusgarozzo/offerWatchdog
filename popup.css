@@ -264,3 +264,32 @@ input::placeholder {
 #verifying-overlay.hidden {
   display: none;
 }
+
+.toggle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: bold;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--spacing-sm);
+}
+
+.arrow {
+  font-size: 14px;
+  transition: transform 0.3s ease;
+}
+
+.add-form.collapsed {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.add-form.expanded {
+  max-height: 500px;
+  transition: max-height 0.3s ease;
+}
