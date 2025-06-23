@@ -37,6 +37,16 @@
 
 ---
 
+
+### 🆕 Mejora: Formulario desplegable
+(2025-06-19)
+A partir de la versión actual, la sección para agregar productos fue optimizada para mejorar la experiencia de usuario:
+
+- Ahora se encuentra **plegada por defecto**.
+- Se puede desplegar fácilmente haciendo clic en la fila **"Agregar producto ▼"**.
+- Esto permite una vista más limpia cuando solo se desea revisar los productos monitoreados, sin agregar nuevos.
+
+
 ## 🤝 Contribución
 
 ¡Las contribuciones son bienvenidas! Si tienes ideas, mejoras o encuentras errores, abre un issue o haz un pull request.

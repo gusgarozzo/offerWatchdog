@@ -8,6 +8,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const emptyStateDiv = document.getElementById("emptyState");
   const statusDiv = document.getElementById("status");
   const verifyingOverlay = document.getElementById("verifying-overlay");
+  const toggleBtn = document.getElementById("toggleAddForm");
+  const addForm = document.getElementById("addForm");
+  const arrow = document.getElementById("toggleArrow");
+
+  toggleBtn.addEventListener("click", () => {
+    const expanded = addForm.classList.toggle("expanded");
+    addForm.classList.toggle("collapsed", !expanded);
+    arrow.textContent = expanded ? "▲" : "▼";
+  });
+
 
   // Load existing products
   const loadProducts = async () => {
@@ -44,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }</a>
           <div class="product-price">${
             product.price
-              ? `Precio: $${product.price.toFixed(2)}`
+              ? `Precio: $${product.price.toLocaleString("es-AR", { minimumFractionDigits: 2 })}`
               : "Precio no disponible"
           }</div>
           <div class="product-last-checked">Última verificación: ${lastCheckedDate}</div>
