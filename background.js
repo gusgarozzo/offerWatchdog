@@ -4,21 +4,17 @@ chrome.runtime.onInstalled.addListener(() => {
   console.log(
     "background.js: Extensión instalada/actualizada. Service Worker mínimo."
   );
-  chrome.alarms.create("checkProducts", {
-    delayInMinutes: 1,
-    periodInMinutes: 60, // Comprobar cada 60 minutos
+  chrome.storage.sync.get({ checkInterval: 60 }, (data) => {
+    chrome.alarms.create("checkProducts", {
+      delayInMinutes: 1,
+      periodInMinutes: data.checkInterval,
+    });
   });
 });
 
-// Placeholder para la lógica de monitoreo de precios
-// chrome.alarms.create('checkProducts', {
-//   delayInMinutes: 1,
-//   periodInMinutes: 60 // Comprobar cada 60 minutos
-// });
-
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === "checkProducts") {
-    console.log("Verificando productos...");
+    console.log("Verificando productos... (intervalo actual)");
     await checkAllProducts();
   }
 });
@@ -461,9 +457,21 @@ const checkAllProducts = async () => {
   await chrome.storage.sync.set({ products });
 };
 
+// Permitir actualizar el intervalo de verificación desde el popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "checkAllProductsNow") {
     checkAllProducts().then(() => {
+      sendResponse({ success: true });
+    });
+    return true;
+  }
+  if (request.action === "updateCheckInterval") {
+    const newInterval = request.value;
+    chrome.alarms.create("checkProducts", {
+      delayInMinutes: 1,
+      periodInMinutes: newInterval,
+    });
+    chrome.storage.sync.set({ checkInterval: newInterval }, () => {
       sendResponse({ success: true });
     });
     return true;

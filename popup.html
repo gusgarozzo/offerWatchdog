@@ -10,34 +10,53 @@
     <div class="container">
       <header class="header">
         <h1 class="title">Monitor de Productos</h1>
+        <button
+          id="openOptionsBtn"
+          class="icon-btn settings-btn"
+          aria-label="Configuración"
+          title="Configuración"
+        >
+          <img
+            src="images/settings.png"
+            alt="Configuración"
+            class="settings-img"
+            width="20"
+            height="20"
+            draggable="false"
+          />
+        </button>
       </header>
 
-  <section class="add-section">
-    <div class="toggle-header" id="toggleAddForm">
-      <span>Agregar producto</span>
-      <span class="arrow" id="toggleArrow">▼</span>
-    </div>
+      <section class="add-section">
+        <div class="toggle-header" id="toggleAddForm">
+          <span>Agregar producto</span>
+          <span class="arrow" id="toggleArrow">▼</span>
+        </div>
 
-    <div class="add-form collapsed" id="addForm">
-      <div class="input-group">
-        <input
-          type="url"
-          id="productUrl"
-          placeholder="URL del producto"
-          required
-        />
-        <button type="button" class="current-page" id="useCurrentPage">
-          Usar página actual
-        </button>
-      </div>
+        <div class="add-form collapsed" id="addForm">
+          <div class="input-group">
+            <input
+              type="url"
+              id="productUrl"
+              placeholder="URL del producto"
+              required
+            />
+            <button type="button" class="current-page" id="useCurrentPage">
+              Usar página actual
+            </button>
+          </div>
 
-      <div class="input-group">
-        <input type="text" id="productName" placeholder="Nombre (opcional)" />
-      </div>
+          <div class="input-group">
+            <input
+              type="text"
+              id="productName"
+              placeholder="Nombre (opcional)"
+            />
+          </div>
 
-      <button type="button" class="add-btn" id="addProduct">Agregar</button>
-    </div>
-  </section>
+          <button type="button" class="add-btn" id="addProduct">Agregar</button>
+        </div>
+      </section>
 
       <section class="products-list">
         <div class="products-header">
@@ -55,6 +74,34 @@
     </div>
 
     <div id="verifying-overlay" class="hidden">Verificando productos...</div>
+
+    <!-- Modal de configuración -->
+    <div id="configModal" class="modal-overlay hidden">
+      <div class="modal-window">
+        <button class="modal-close" id="closeConfigModal" title="Cerrar">
+          &times;
+        </button>
+        <h2 class="modal-title">Configuración</h2>
+        <form id="configForm" autocomplete="off">
+          <div class="input-group">
+            <label for="intervalInput"
+              >Intervalo de verificación (minutos):</label
+            >
+            <input
+              type="number"
+              id="intervalInput"
+              min="1"
+              max="1440"
+              required
+            />
+          </div>
+          <button type="submit" class="config-btn" style="margin-top: 16px">
+            Guardar
+          </button>
+        </form>
+        <div class="config-status" id="configStatus"></div>
+      </div>
+    </div>
 
     <script src="popup.js"></script>
   </body>

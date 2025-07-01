@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Configuración - Monitor de Productos</title>
+    <link rel="stylesheet" href="popup.css" />
+    <style>
+      .options-container {
+        max-width: 400px;
+        margin: 40px auto;
+        background: var(--background);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-light);
+        padding: var(--spacing-xl);
+        border: 1px solid var(--border);
+      }
+      .options-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: var(--spacing-lg);
+        text-align: center;
+      }
+      .options-status {
+        margin-top: var(--spacing-md);
+        font-size: 15px;
+        min-height: 22px;
+        text-align: center;
+      }
+      .back-btn {
+        display: block;
+        margin: 30px auto 0 auto;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius);
+        font-size: 15px;
+        font-weight: 500;
+        padding: 10px 30px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+      .back-btn:hover {
+        background: var(--primary-hover);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="options-container">
+      <div class="options-title">Configuración</div>
+      <form id="optionsForm">
+        <div class="input-group">
+          <label for="intervalInput"
+            >Intervalo de verificación (minutos):</label
+          >
+          <input type="number" id="intervalInput" min="1" max="1440" required />
+        </div>
+        <button type="submit" class="config-btn" style="margin-top: 20px">
+          Guardar
+        </button>
+      </form>
+      <div class="options-status" id="optionsStatus"></div>
+      <button class="back-btn" onclick="window.close()">Cerrar</button>
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>
