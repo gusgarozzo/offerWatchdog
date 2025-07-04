@@ -12,32 +12,36 @@
         <h1 class="title">Monitor de Productos</h1>
       </header>
 
-  <section class="add-section">
-    <div class="toggle-header" id="toggleAddForm">
-      <span>Agregar producto</span>
-      <span class="arrow" id="toggleArrow">▼</span>
-    </div>
+      <section class="add-section">
+        <div class="toggle-header" id="toggleAddForm">
+          <span>Agregar producto</span>
+          <span class="arrow" id="toggleArrow">▼</span>
+        </div>
 
-    <div class="add-form collapsed" id="addForm">
-      <div class="input-group">
-        <input
-          type="url"
-          id="productUrl"
-          placeholder="URL del producto"
-          required
-        />
-        <button type="button" class="current-page" id="useCurrentPage">
-          Usar página actual
-        </button>
-      </div>
+        <div class="add-form collapsed" id="addForm">
+          <div class="input-group">
+            <input
+              type="url"
+              id="productUrl"
+              placeholder="URL del producto"
+              required
+            />
+            <button type="button" class="current-page" id="useCurrentPage">
+              Usar página actual
+            </button>
+          </div>
 
-      <div class="input-group">
-        <input type="text" id="productName" placeholder="Nombre (opcional)" />
-      </div>
+          <div class="input-group">
+            <input
+              type="text"
+              id="productName"
+              placeholder="Nombre (opcional)"
+            />
+          </div>
 
-      <button type="button" class="add-btn" id="addProduct">Agregar</button>
-    </div>
-  </section>
+          <button type="button" class="add-btn" id="addProduct">Agregar</button>
+        </div>
+      </section>
 
       <section class="products-list">
         <div class="products-header">
@@ -56,6 +60,7 @@
 
     <div id="verifying-overlay" class="hidden">Verificando productos...</div>
 
+    <script src="libs/localForage/dist/localforage.min.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

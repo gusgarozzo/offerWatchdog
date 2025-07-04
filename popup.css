@@ -293,3 +293,130 @@ input::placeholder {
   max-height: 500px;
   transition: max-height 0.3s ease;
 }
+
+.product-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.historial-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  margin-bottom: 4px;
+}
+
+.historial-btn:hover,
+.historial-btn:focus {
+  background: var(--surface);
+}
+
+.historial-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  filter: grayscale(0.5) brightness(0.7);
+  transition: filter 0.2s;
+}
+
+.historial-btn:hover .historial-icon,
+.historial-btn:focus .historial-icon {
+  filter: none;
+}
+
+.product-actions {
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.product-item:hover .product-actions {
+  opacity: 1;
+}
+
+/* === Estilos elegantes para historial === */
+.historial-container {
+  padding: 24px 16px;
+  background: var(--background);
+}
+
+.historial-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  text-align: center;
+  color: var(--primary);
+  letter-spacing: 0.01em;
+}
+
+.historial-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.historial-item {
+  background: var(--surface);
+  border-radius: 8px;
+  margin-bottom: 18px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  padding: 18px 16px 12px 16px;
+  border: 1px solid var(--surface);
+  transition: box-shadow 0.2s;
+  position: relative;
+}
+
+.historial-item:last-child {
+  margin-bottom: 0;
+}
+
+.historial-tipo {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.historial-tipo.precio::before {
+  content: "\1F4B0";
+  font-size: 16px;
+  margin-right: 4px;
+}
+.historial-tipo.disponibilidad::before {
+  content: "\1F4E6";
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+.historial-fecha {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.historial-cambio {
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.historial-cambio .de {
+  color: #d32f2f;
+  font-weight: 500;
+}
+.historial-cambio .a {
+  color: #388e3c;
+  font-weight: 500;
+}
+
+.historial-empty {
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 32px;
+  font-size: 15px;
+}
