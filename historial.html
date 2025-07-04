@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=400, initial-scale=1.0" />
+    <title>Historial del Producto</title>
+    <link rel="stylesheet" href="popup.css" />
+    <style>
+      body {
+        width: 100%;
+        max-width: 400px;
+        min-width: 320px;
+        min-height: 300px;
+        background: var(--background);
+      }
+      .historial-container {
+        padding: 24px 16px;
+      }
+      .historial-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 18px;
+        text-align: center;
+      }
+      .historial-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .historial-item {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--surface);
+        font-size: 14px;
+      }
+      .historial-item:last-child {
+        border-bottom: none;
+      }
+      .historial-empty {
+        color: var(--text-secondary);
+        text-align: center;
+        margin-top: 32px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="historial-container">
+      <div class="historial-title" id="historialTitle">Historial</div>
+      <ul class="historial-list" id="historialList"></ul>
+      <div class="historial-empty" id="historialEmpty" style="display: none">
+        No hay historial para este producto.
+      </div>
+    </div>
+    <script src="libs/localForage/dist/localforage.min.js"></script>
+    <script src="historial.js"></script>
+  </body>
+</html>

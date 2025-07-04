@@ -1,3 +1,5 @@
+importScripts("libs/localForage/dist/localforage.min.js");
+
 console.log("background.js: Service Worker mínimo cargado.");
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -350,7 +352,7 @@ const observeDOMChanges = (timeout = 20000) => {
 };
 
 // Lógica principal de background.js
-const checkProduct = async (product) => {
+const checkProduct = async (product, allProducts, index) => {
   let tabId;
   let tabCreated = false;
   try {
@@ -394,19 +396,24 @@ const checkProduct = async (product) => {
     if (productInfo) {
       const { price, title, availability } = productInfo;
       let notificationMessage = null;
+      let oldPrice = product.price;
+      let oldAvailability = product.availability;
 
       if (price !== null && price !== product.price) {
-        const oldPrice = product.price;
+        oldPrice = product.price;
         product.price = price;
         notificationMessage = `${
           title || product.name || product.url
         } ha cambiado de precio: de ${
           oldPrice ? `$${oldPrice.toFixed(2)}` : "desconocido"
         } a $${price.toFixed(2)}`;
+        if (oldPrice !== null && oldPrice !== undefined) {
+          registrarCambioHistorial(product, "precio", oldPrice, price);
+        }
       }
 
       if (availability && availability !== product.availability) {
-        const oldAvailability = product.availability;
+        oldAvailability = product.availability;
         product.availability = availability;
         if (notificationMessage) {
           notificationMessage += ` y su disponibilidad cambió de ${
@@ -419,6 +426,14 @@ const checkProduct = async (product) => {
             oldAvailability || "desconocido"
           } a ${availability}`;
         }
+        if (oldAvailability !== null && oldAvailability !== undefined) {
+          registrarCambioHistorial(
+            product,
+            "disponibilidad",
+            oldAvailability,
+            availability
+          );
+        }
       }
 
       if (title && !product.name) {
@@ -426,6 +441,12 @@ const checkProduct = async (product) => {
       }
 
       product.lastChecked = Date.now();
+
+      // Guardar el producto actualizado en el array y en storage
+      if (Array.isArray(allProducts) && typeof index === "number") {
+        allProducts[index] = { ...product };
+        await chrome.storage.sync.set({ products: allProducts });
+      }
 
       if (notificationMessage) {
         chrome.notifications.create({
@@ -435,11 +456,13 @@ const checkProduct = async (product) => {
           message: notificationMessage,
           priority: 2,
         });
-        sendTelegramMessage(notificationMessage);
       }
+    } else {
+      console.warn("No se pudo extraer información del producto:", product.url);
     }
   } catch (error) {
     product.lastChecked = Date.now();
+    console.error("Error al verificar producto:", product.url, error);
   } finally {
     if (tabCreated && tabId !== undefined) {
       await chrome.tabs.remove(tabId);
@@ -451,21 +474,78 @@ const checkAllProducts = async () => {
   let { products } = await chrome.storage.sync.get("products");
   products = products || [];
 
-  // Create an array of promises for each product check
-  const checkPromises = products.map((product) => checkProduct(product));
-
-  // Wait for all product checks to complete concurrently
+  // Ejecutar verificación y guardar cada producto actualizado
+  const checkPromises = products.map((product, idx) =>
+    checkProduct(product, products, idx)
+  );
   await Promise.all(checkPromises);
-
-  // Save any updates to lastChecked or names that might have occurred without a price change
-  await chrome.storage.sync.set({ products });
+  // Ya se guardan los productos dentro de checkProduct
 };
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "checkAllProductsNow") {
+// --- INICIO: Listener unificado de mensajes ---
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "checkAllProductsNow") {
     checkAllProducts().then(() => {
       sendResponse({ success: true });
     });
     return true;
   }
+  if (message.action === "abrirHistorial") {
+    const idx = message.idx;
+    const url = chrome.runtime.getURL(`historial.html?idx=${idx}`);
+    if (historialWindows[idx] && historialWindows[idx].id) {
+      chrome.windows.update(
+        historialWindows[idx].id,
+        { focused: true },
+        () => {}
+      );
+      return;
+    }
+    chrome.windows.create(
+      {
+        url,
+        type: "popup",
+        width: 400,
+        height: 500,
+        focused: true,
+      },
+      (win) => {
+        historialWindows[idx] = { id: win.id };
+        chrome.windows.onRemoved.addListener(function removedListener(
+          closedId
+        ) {
+          if (closedId === win.id) {
+            delete historialWindows[idx];
+            chrome.windows.onRemoved.removeListener(removedListener);
+          }
+        });
+      }
+    );
+  }
 });
+// --- FIN: Listener unificado de mensajes ---
+
+// --- INICIO: Funciones de historial con localForage ---
+function registrarCambioHistorial(product, cambio, valorAnterior, valorNuevo) {
+  if (typeof localforage === "undefined") {
+    console.warn("localforage no está disponible en background.js");
+    return;
+  }
+  const entry = {
+    productUrl: product.url,
+    timestamp: Date.now(),
+    cambio,
+    valorAnterior,
+    valorNuevo,
+  };
+  const key = `historial_${product.url}`;
+  localforage.getItem(key).then((historial) => {
+    historial = historial || [];
+    historial.unshift(entry); // más reciente primero
+    return localforage.setItem(key, historial);
+  });
+}
+// --- FIN: Funciones de historial con localForage ---
+
+// --- INICIO: Gestión de ventanas de historial ---
+const historialWindows = {};
