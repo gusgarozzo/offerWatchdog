@@ -34,16 +34,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       li.className = "historial-item";
       const fecha = new Date(entry.timestamp).toLocaleString();
       li.innerHTML = `
-        <div class="historial-tipo ${entry.cambio}">${
-        entry.cambio === "precio" ? "Precio" : "Stock"
-      }</div>
-        <span class="historial-fecha">${fecha}</span>
-        <div class="historial-cambio">
-          <span style='color:#888'>De:</span> <span class="de">${
-            entry.valorAnterior
-          }</span> <span style='color:#888'>a</span> <span class="a">${
-        entry.valorNuevo
-      }</span>
+        <div class="historial-fecha">${fecha}</div>
+        <div class="historial-tipo">${
+          entry.cambio === "precio" ? "Precio" : "Stock"
+        }</div>
+        <div class="historial-cambio-row">
+          <span class="de">${entry.valorAnterior}</span>
+          <span class="arrow">→</span>
+          <span class="a">${entry.valorNuevo}</span>
         </div>
       `;
       list.appendChild(li);
