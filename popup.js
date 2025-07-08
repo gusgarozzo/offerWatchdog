@@ -51,9 +51,9 @@ document.addEventListener("DOMContentLoaded", () => {
           <a href="${product.url}" target="_blank" class="product-url">${
         product.url
       }</a>
-          <div class="product-price">${
+          <div class="product-price">$${
             product.price
-              ? `Precio: $${product.price.toLocaleString("es-AR", {
+              ? `${product.price.toLocaleString("es-AR", {
                   minimumFractionDigits: 2,
                 })}`
               : "Precio no disponible"
@@ -63,9 +63,20 @@ document.addEventListener("DOMContentLoaded", () => {
             product.availability || "Desconocida"
           }</div>
         </div>
-        <button class="remove-btn" data-index="${index}">Eliminar</button>
+        <div class="product-actions">
+          <button class="historial-btn" data-index="${index}" title="Ver historial">
+            <img src="images/historial_icon.png" alt="Historial" class="historial-icon" />
+          </button>
+          <button class="remove-btn" data-index="${index}">Eliminar</button>
+        </div>
       `;
       productsListDiv.appendChild(productItem);
+
+      const historialBtn = productItem.querySelector(".historial-btn");
+      historialBtn.addEventListener("click", (e) => {
+        const idx = e.currentTarget.dataset.index;
+        chrome.runtime.sendMessage({ action: "abrirHistorial", idx });
+      });
     });
 
     document.querySelectorAll(".remove-btn").forEach((button) => {
@@ -155,10 +166,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const index = parseInt(event.target.dataset.index);
     let { products } = await chrome.storage.sync.get("products");
     products = products || [];
+    const removedProduct = products[index];
     products.splice(index, 1);
     await chrome.storage.sync.set({ products });
     renderProducts(products);
     showStatus("Producto eliminado", "success");
+    // Eliminar historial asociado si existe
+    if (
+      removedProduct &&
+      removedProduct.url &&
+      typeof localforage !== "undefined"
+    ) {
+      localforage.removeItem(`historial_${removedProduct.url}`);
+    }
   };
 
   loadProducts();

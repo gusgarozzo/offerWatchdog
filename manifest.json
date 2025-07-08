@@ -23,5 +23,16 @@
     "default_title": "Monitor de Productos"
   },
 
-  "options_page": "options.html"
+  "options_page": "options.html",
+
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "historial.html",
+        "historial.js",
+        "libs/localForage/dist/localforage.min.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
