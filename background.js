@@ -6,21 +6,17 @@ chrome.runtime.onInstalled.addListener(() => {
   console.log(
     "background.js: Extensión instalada/actualizada. Service Worker mínimo."
   );
-  chrome.alarms.create("checkProducts", {
-    delayInMinutes: 1,
-    periodInMinutes: 60, // Comprobar cada 60 minutos
+  chrome.storage.sync.get({ checkInterval: 60 }, (data) => {
+    chrome.alarms.create("checkProducts", {
+      delayInMinutes: 1,
+      periodInMinutes: data.checkInterval,
+    });
   });
 });
 
-// Placeholder para la lógica de monitoreo de precios
-// chrome.alarms.create('checkProducts', {
-//   delayInMinutes: 1,
-//   periodInMinutes: 60 // Comprobar cada 60 minutos
-// });
-
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === "checkProducts") {
-    console.log("Verificando productos...");
+    console.log("Verificando productos... (intervalo actual)");
     await checkAllProducts();
   }
 });
@@ -521,6 +517,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
       }
     );
+  }
+  if (message.action === "updateCheckInterval") {
+    const newInterval = message.value;
+    chrome.alarms.create("checkProducts", {
+      delayInMinutes: 1,
+      periodInMinutes: newInterval,
+    });
+    chrome.storage.sync.set({ checkInterval: newInterval }, () => {
+      sendResponse({ success: true });
+    });
+    return true;
   }
 });
 // --- FIN: Listener unificado de mensajes ---

@@ -23,6 +23,8 @@
     "default_title": "Monitor de Productos"
   },
 
+  "options_page": "options.html",
+
   "web_accessible_resources": [
     {
       "resources": [

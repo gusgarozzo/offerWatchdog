@@ -59,14 +59,21 @@ body {
    HEADER
    ===================== */
 .header {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
   margin-bottom: var(--spacing-xl);
+  padding-top: 2px;
 }
 
 .title {
-  font-size: 20px;
-  font-weight: 700;
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
   letter-spacing: -0.01em;
+  margin: 0;
   color: var(--primary);
 }
 
@@ -634,5 +641,305 @@ body {
 @media (prefers-color-scheme: dark) {
   .historial-title {
     color: #e5e7eb;
+  }
+}
+
+/* MODAL DE CONFIGURACIÓN CONSISTENTE */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(30, 32, 38, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.2s;
+}
+.modal-overlay.hidden {
+  display: none;
+}
+.modal-window {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-light);
+  padding: 28px 22px 20px 22px;
+  min-width: 260px;
+  max-width: 340px;
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  color: var(--text-primary);
+  font-family: inherit;
+  animation: modalIn 0.22s cubic-bezier(0.4, 1.4, 0.6, 1) 1;
+}
+@keyframes modalIn {
+  from {
+    transform: translateY(40px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+  color: var(--primary);
+  text-align: center;
+  letter-spacing: -0.5px;
+}
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+  padding: 0 2px;
+  line-height: 1;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-close:hover,
+.modal-close:focus {
+  color: #fff;
+  background: var(--primary);
+}
+.config-status {
+  margin-top: 10px;
+  font-size: 13px;
+  min-height: 18px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+#configForm label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  display: block;
+}
+#configForm input[type="number"] {
+  font-size: 15px;
+  padding: 11px 12px;
+  border-radius: calc(var(--radius) - 4px);
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  margin-top: 2px;
+  margin-bottom: 0;
+  width: 100%;
+  transition: border-color 0.2s, background 0.2s;
+  box-sizing: border-box;
+}
+#configForm input[type="number"]:focus {
+  border-color: var(--primary);
+  outline: none;
+  background: var(--background);
+}
+#configForm .config-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(30, 41, 59, 0.08);
+  margin-top: 16px;
+  transition: background var(--transition), box-shadow var(--transition),
+    transform 0.18s;
+  cursor: pointer;
+}
+#configForm .config-btn:hover,
+#configForm .config-btn:focus {
+  background: var(--primary-hover);
+  box-shadow: 0 4px 16px rgba(30, 41, 59, 0.13);
+  transform: translateY(-2px) scale(1.02);
+}
+#configForm .config-btn:disabled {
+  background: var(--text-secondary);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+@media (prefers-color-scheme: dark) {
+  .modal-window {
+    background: #23272f;
+    color: var(--text-primary);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.32);
+    border: 1px solid var(--border);
+  }
+  #configForm input[type="number"] {
+    background: rgba(35, 39, 47, 0.85);
+    color: var(--text-primary);
+    border: 1.5px solid var(--border);
+  }
+  #configForm input[type="number"]:focus {
+    background: var(--background);
+    border-color: var(--primary);
+  }
+}
+
+/* --- Botones sutiles y compactos --- */
+.config-btn,
+.add-btn {
+  width: 100%;
+  padding: 7px 0;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+  letter-spacing: 0.01em;
+  margin-bottom: 2px;
+  outline: none;
+  min-height: 0;
+}
+.config-btn:hover,
+.add-btn:hover,
+.config-btn:focus,
+.add-btn:focus {
+  background: var(--primary-hover);
+  color: #fff;
+  transform: translateY(-1px) scale(1.01);
+}
+.config-btn:active,
+.add-btn:active {
+  background: var(--primary-hover);
+  color: #fff;
+  transform: scale(0.98);
+}
+.config-btn:disabled,
+.add-btn:disabled {
+  background: var(--text-secondary);
+  color: #fff;
+  cursor: not-allowed;
+}
+
+.current-page {
+  font-size: 12px;
+  color: var(--primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 3px 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  border-radius: 4px;
+  transition: background 0.12s, color 0.12s;
+}
+.current-page:hover,
+.current-page:focus {
+  color: var(--primary-hover);
+  background: rgba(0, 122, 255, 0.06);
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  transition: background 0.12s, color 0.12s;
+  box-shadow: none;
+  outline: none;
+}
+.remove-btn:hover,
+.remove-btn:focus {
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--danger);
+}
+
+/* Botón de engranaje de configuración */
+.icon-btn.settings-btn {
+  position: static;
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  transition: background 0.13s, color 0.13s;
+  padding: 0;
+  z-index: 2;
+  outline: none;
+}
+.icon-btn.settings-btn:hover,
+.icon-btn.settings-btn:focus {
+  background: rgba(0, 122, 255, 0.08);
+  color: var(--primary);
+}
+.icon-btn.settings-btn svg {
+  display: block;
+}
+
+.settings-img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .settings-img {
+    filter: invert(1) brightness(2) !important;
+  }
+}
+
+#configForm select {
+  font-size: 15px;
+  padding: 11px 12px;
+  border-radius: calc(var(--radius) - 4px);
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  margin-top: 2px;
+  margin-bottom: 0;
+  width: 100%;
+  transition: border-color 0.2s, background 0.2s;
+  box-sizing: border-box;
+  appearance: none;
+}
+#configForm select:focus {
+  border-color: var(--primary);
+  outline: none;
+  background: var(--background);
+}
+@media (prefers-color-scheme: dark) {
+  #configForm select {
+    background: rgba(35, 39, 47, 0.85);
+    color: var(--text-primary);
+    border: 1.5px solid var(--border);
+  }
+  #configForm select:focus {
+    background: var(--background);
+    border-color: var(--primary);
   }
 }

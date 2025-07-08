@@ -182,4 +182,69 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   loadProducts();
+
+  // --- Modal de configuración ---
+  const openOptionsBtn = document.getElementById("openOptionsBtn");
+  const configModal = document.getElementById("configModal");
+  const closeConfigModal = document.getElementById("closeConfigModal");
+  const configForm = document.getElementById("configForm");
+  const intervalInput = document.getElementById("intervalInput");
+  const configStatus = document.getElementById("configStatus");
+
+  // Mostrar el modal
+  if (openOptionsBtn && configModal && configStatus && intervalInput) {
+    openOptionsBtn.addEventListener("click", () => {
+      configModal.classList.remove("hidden");
+      configStatus.textContent = "";
+      chrome.storage.sync.get({ checkInterval: 60 }, (data) => {
+        intervalInput.value = data.checkInterval;
+      });
+    });
+  }
+
+  // Cerrar el modal con la X
+  if (closeConfigModal && configModal) {
+    closeConfigModal.addEventListener("click", () => {
+      configModal.classList.add("hidden");
+    });
+  }
+
+  // Cerrar el modal haciendo clic fuera de la ventana
+  if (configModal) {
+    configModal.addEventListener("click", (e) => {
+      if (e.target === configModal) {
+        configModal.classList.add("hidden");
+      }
+    });
+  }
+
+  // Guardar el nuevo intervalo
+  if (configForm && intervalInput && configStatus && configModal) {
+    configForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const newInterval = parseInt(intervalInput.value, 10);
+      if (isNaN(newInterval) || newInterval < 1 || newInterval > 1440) {
+        configStatus.textContent = "Por favor, selecciona un valor válido.";
+        configStatus.style.color = "var(--danger)";
+        return;
+      }
+      chrome.storage.sync.set({ checkInterval: newInterval }, () => {
+        chrome.runtime.sendMessage(
+          { action: "updateCheckInterval", value: newInterval },
+          (response) => {
+            if (response && response.success) {
+              configStatus.textContent = "Intervalo actualizado correctamente.";
+              configStatus.style.color = "var(--primary)";
+              setTimeout(() => {
+                configModal.classList.add("hidden");
+              }, 350);
+            } else {
+              configStatus.textContent = "Error al actualizar el intervalo.";
+              configStatus.style.color = "var(--danger)";
+            }
+          }
+        );
+      });
+    });
+  }
 });
