@@ -192,51 +192,59 @@ document.addEventListener("DOMContentLoaded", () => {
   const configStatus = document.getElementById("configStatus");
 
   // Mostrar el modal
-  openOptionsBtn.addEventListener("click", () => {
-    configModal.classList.remove("hidden");
-    configStatus.textContent = "";
-    chrome.storage.sync.get({ checkInterval: 60 }, (data) => {
-      intervalInput.value = data.checkInterval;
+  if (openOptionsBtn && configModal && configStatus && intervalInput) {
+    openOptionsBtn.addEventListener("click", () => {
+      configModal.classList.remove("hidden");
+      configStatus.textContent = "";
+      chrome.storage.sync.get({ checkInterval: 60 }, (data) => {
+        intervalInput.value = data.checkInterval;
+      });
     });
-  });
+  }
 
   // Cerrar el modal con la X
-  closeConfigModal.addEventListener("click", () => {
-    configModal.classList.add("hidden");
-  });
+  if (closeConfigModal && configModal) {
+    closeConfigModal.addEventListener("click", () => {
+      configModal.classList.add("hidden");
+    });
+  }
 
   // Cerrar el modal haciendo clic fuera de la ventana
-  configModal.addEventListener("click", (e) => {
-    if (e.target === configModal) {
-      configModal.classList.add("hidden");
-    }
-  });
+  if (configModal) {
+    configModal.addEventListener("click", (e) => {
+      if (e.target === configModal) {
+        configModal.classList.add("hidden");
+      }
+    });
+  }
 
   // Guardar el nuevo intervalo
-  configForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const newInterval = parseInt(intervalInput.value, 10);
-    if (isNaN(newInterval) || newInterval < 1 || newInterval > 1440) {
-      configStatus.textContent = "Por favor, ingresa un valor válido (1-1440).";
-      configStatus.style.color = "var(--danger)";
-      return;
-    }
-    chrome.storage.sync.set({ checkInterval: newInterval }, () => {
-      chrome.runtime.sendMessage(
-        { action: "updateCheckInterval", value: newInterval },
-        (response) => {
-          if (response && response.success) {
-            configStatus.textContent = "Intervalo actualizado correctamente.";
-            configStatus.style.color = "var(--primary)";
-            setTimeout(() => {
-              configModal.classList.add("hidden");
-            }, 350);
-          } else {
-            configStatus.textContent = "Error al actualizar el intervalo.";
-            configStatus.style.color = "var(--danger)";
+  if (configForm && intervalInput && configStatus && configModal) {
+    configForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const newInterval = parseInt(intervalInput.value, 10);
+      if (isNaN(newInterval) || newInterval < 1 || newInterval > 1440) {
+        configStatus.textContent = "Por favor, selecciona un valor válido.";
+        configStatus.style.color = "var(--danger)";
+        return;
+      }
+      chrome.storage.sync.set({ checkInterval: newInterval }, () => {
+        chrome.runtime.sendMessage(
+          { action: "updateCheckInterval", value: newInterval },
+          (response) => {
+            if (response && response.success) {
+              configStatus.textContent = "Intervalo actualizado correctamente.";
+              configStatus.style.color = "var(--primary)";
+              setTimeout(() => {
+                configModal.classList.add("hidden");
+              }, 350);
+            } else {
+              configStatus.textContent = "Error al actualizar el intervalo.";
+              configStatus.style.color = "var(--danger)";
+            }
           }
-        }
-      );
+        );
+      });
     });
-  });
+  }
 });

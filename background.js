@@ -518,6 +518,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     );
   }
+  if (message.action === "updateCheckInterval") {
+    const newInterval = message.value;
+    chrome.alarms.create("checkProducts", {
+      delayInMinutes: 1,
+      periodInMinutes: newInterval,
+    });
+    chrome.storage.sync.set({ checkInterval: newInterval }, () => {
+      sendResponse({ success: true });
+    });
+    return true;
+  }
 });
 // --- FIN: Listener unificado de mensajes ---
 
