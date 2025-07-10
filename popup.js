@@ -43,7 +43,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const productItem = document.createElement("div");
       productItem.className = "product-item";
       const lastCheckedDate = product.lastChecked
-        ? new Date(product.lastChecked).toLocaleString()
+        ? new Date(product.lastChecked).toLocaleString("es-AR", {
+            hour12: false,
+          })
         : "Nunca";
       productItem.innerHTML = `
         <div class="product-info">

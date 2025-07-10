@@ -32,7 +32,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     historial.forEach((entry) => {
       const li = document.createElement("li");
       li.className = "historial-item";
-      const fecha = new Date(entry.timestamp).toLocaleString();
+      const fecha = new Date(entry.timestamp).toLocaleString("es-AR", {
+        hour12: false,
+      });
       li.innerHTML = `
         <div class="historial-fecha">${fecha}</div>
         <div class="historial-tipo">${
