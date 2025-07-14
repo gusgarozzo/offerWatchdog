@@ -12,7 +12,11 @@
     "scripting"
   ],
 
-  "host_permissions": ["https://*/*", "http://*/*"],
+  "host_permissions": [
+    "https://www.mercadolibre.com.ar/*",
+    "https://www.amazon.com/*",
+    "https://www.hobbiesnorberto.com/*"
+  ],
 
   "background": {
     "service_worker": "background.js"
@@ -34,5 +38,11 @@
       ],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  }
 }
