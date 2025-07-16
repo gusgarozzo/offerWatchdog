@@ -249,4 +249,14 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   }
+
+  const modal = document.getElementById("donateModal");
+  const btn = document.getElementById("donateBtn");
+  const span = document.querySelector(".modal-content .close");
+
+  btn.onclick = () => (modal.style.display = "flex");
+  span.onclick = () => (modal.style.display = "none");
+  window.onclick = (e) => {
+    if (e.target == modal) modal.style.display = "none";
+  };
 });
