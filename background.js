@@ -146,6 +146,11 @@ async function extractProductInfoInPage() {
       "low stock",
       "on sale",
     ];
+    const pausedKeywords = [
+      "publicación pausada",
+      "publicacion pausada",
+      "pausada",
+    ];
     const outOfStockKeywords = [
       "out of stock",
       "agotado",
@@ -154,8 +159,6 @@ async function extractProductInfoInPage() {
       "sold out",
       "temporalmente sin stock",
       "no hay stock",
-      "pausada",
-      "publicación pausada",
       "no se puede comprar",
       "backorder",
       "preorder",
@@ -202,6 +205,9 @@ async function extractProductInfoInPage() {
         const text = (element.content || element.textContent || "")
           .trim()
           .toLowerCase();
+        if (pausedKeywords.some((keyword) => text.includes(keyword))) {
+          return "Paused";
+        }
         if (inStockKeywords.some((keyword) => text.includes(keyword))) {
           return "In stock";
         }
@@ -212,6 +218,9 @@ async function extractProductInfoInPage() {
     }
 
     const bodyText = document.body.textContent.toLowerCase();
+    if (pausedKeywords.some((keyword) => bodyText.includes(keyword))) {
+      return "Paused";
+    }
     if (inStockKeywords.some((keyword) => bodyText.includes(keyword))) {
       return "In stock";
     }
@@ -416,11 +425,18 @@ const checkProduct = async (product, allProducts, index) => {
             oldAvailability || "desconocido"
           } a ${availability}`;
         } else {
-          notificationMessage = `${
-            title || product.name || product.url
-          } ha cambiado de disponibilidad: de ${
-            oldAvailability || "desconocido"
-          } a ${availability}`;
+          // Notificación diferenciada para 'Paused'
+          if (availability === "Paused") {
+            notificationMessage = `${
+              title || product.name || product.url
+            } ha sido PAUSADA. La publicación no está disponible para comprar.`;
+          } else {
+            notificationMessage = `${
+              title || product.name || product.url
+            } ha cambiado de disponibilidad: de ${
+              oldAvailability || "desconocido"
+            } a ${availability}`;
+          }
         }
         if (oldAvailability !== null && oldAvailability !== undefined) {
           registrarCambioHistorial(
