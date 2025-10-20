@@ -35,15 +35,33 @@ document.addEventListener("DOMContentLoaded", async () => {
       const fecha = new Date(entry.timestamp).toLocaleString("es-AR", {
         hour12: false,
       });
+
+      const formatValue = (v) => {
+        if (typeof v === "number" && !isNaN(v)) return v.toFixed(2);
+        const str = String(v ?? "").trim();
+        if (str === "") return "";
+        let normalized = str;
+        if (/^\d{1,3}(\.\d{3})+,\d+$/.test(str)) {
+          normalized = str.replace(/\./g, "").replace(/,/g, ".");
+        } else {
+          normalized = str.replace(/,/g, ".");
+        }
+        const n = parseFloat(normalized);
+        return !isNaN(n) ? n.toFixed(2) : str;
+      };
+
+      const valorAnterior = formatValue(entry.valorAnterior);
+      const valorNuevo = formatValue(entry.valorNuevo);
+
       li.innerHTML = `
         <div class="historial-fecha">${fecha}</div>
         <div class="historial-tipo">${
           entry.cambio === "precio" ? "Precio" : "Stock"
         }</div>
         <div class="historial-cambio-row">
-          <span class="de">${entry.valorAnterior}</span>
+          <span class="de">${valorAnterior}</span>
           <span class="arrow">→</span>
-          <span class="a">${entry.valorNuevo}</span>
+          <span class="a">${valorNuevo}</span>
         </div>
       `;
       list.appendChild(li);
