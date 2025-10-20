@@ -60,6 +60,7 @@ async function extractProductInfoInPage() {
     ".current-price",
     ".item-price",
     "span.andes-money-amount", // Mercado Libre
+    "span.andes-money-amount__fraction", // Mercado Libre
     ".price-box__final-price",
     ".ui-pdp-price__second-line .ui-pdp-price__part",
   ];
@@ -84,7 +85,8 @@ async function extractProductInfoInPage() {
         `content.js: Precio estandarizado (con punto decimal): ${cleanedPrice}`
       );
 
-      const parsedPrice = parseFloat(cleanedPrice);
+      const _parsed = parseFloat(cleanedPrice);
+      const parsedPrice = isNaN(_parsed) ? NaN : Number(_parsed.toFixed(2));
       if (!isNaN(parsedPrice)) {
         price = parsedPrice;
         console.log(`content.js: Precio extraído: ${price}`);
