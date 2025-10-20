@@ -1,0 +1,3 @@
+[submodule "libs/localForage"]
+  path = libs/localForage
+  url = https://github.com/gusgarozzo/localForage.git
