@@ -37,17 +37,32 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       const formatValue = (v) => {
-        if (typeof v === "number" && !isNaN(v)) return v.toFixed(2);
-        const str = String(v ?? "").trim();
-        if (str === "") return "";
-        let normalized = str;
-        if (/^\d{1,3}(\.\d{3})+,\d+$/.test(str)) {
-          normalized = str.replace(/\./g, "").replace(/,/g, ".");
-        } else {
-          normalized = str.replace(/,/g, ".");
+        if (v === null || v === undefined) return "";
+        if (typeof v === "number" && isFinite(v)) {
+          return new Intl.NumberFormat("es-AR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(v);
         }
-        const n = parseFloat(normalized);
-        return !isNaN(n) ? n.toFixed(2) : str;
+        let s = String(v).trim();
+        if (s === "") return "";
+        s = s.replace(/[^\d.,-]/g, "");
+        const negative = /^-/.test(s);
+        s = s.replace(/^-+/, "");
+        if (s.includes(".") && s.includes(",")) {
+          s = s.replace(/\./g, "").replace(/,/g, ".");
+        } else if (s.includes(".") && !s.includes(",")) {
+          const afterLastDot = s.split(".").pop();
+          if (afterLastDot.length === 3) s = s.replace(/\./g, "");
+        } else if (s.includes(",") && !s.includes(".")) {
+          s = s.replace(/,/g, ".");
+        }
+        const n = parseFloat(s);
+        if (!isFinite(n)) return String(v);
+        return new Intl.NumberFormat("es-AR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(negative ? -n : n);
       };
 
       const valorAnterior = formatValue(entry.valorAnterior);
