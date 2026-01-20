@@ -6,10 +6,19 @@ import {
   StyleSheet,
   ScrollView,
   Linking,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useProductStore } from "../hooks/useProductStore";
-import { ChevronLeft, Coffee, Info, Clock, Globe } from "lucide-react-native";
+import {
+  ChevronLeft,
+  Coffee,
+  Info,
+  Bell,
+  Globe,
+  Trash2,
+} from "lucide-react-native";
+import * as Notifications from "expo-notifications";
 
 const INTERVALS = [
   { label: "1 minuto", value: 1 },
@@ -23,10 +32,45 @@ const INTERVALS = [
 
 export default function SettingsScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { checkInterval, setCheckInterval } = useProductStore();
+  const { checkInterval, setCheckInterval, clearProducts } = useProductStore();
 
   const handleDonate = () => {
     Linking.openURL("https://cafecito.app/gusdev");
+  };
+
+  const handleTestNotification = async () => {
+    try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "¡Prueba de Oferta!",
+          body: "Este es un ejemplo de cómo verás las alertas de precio.",
+          data: { productId: "test" },
+          sound: true,
+          priority: Notifications.AndroidNotificationPriority.HIGH,
+        },
+        trigger: null, // trigger immediately
+      });
+    } catch (error) {
+      Alert.alert("Error", "No se pudo enviar la notificación de prueba.");
+    }
+  };
+
+  const handleResetData = () => {
+    Alert.alert(
+      "Borrar todo",
+      "¿Estás seguro de que deseas eliminar todos los productos monitoreados?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar todo",
+          style: "destructive",
+          onPress: () => {
+            clearProducts();
+            navigation.goBack();
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -85,6 +129,50 @@ export default function SettingsScreen({ navigation }: any) {
           </View>
 
           <View className="flex-row items-center mb-5 px-1">
+            <View className="w-1.5 h-5 bg-blue-400 rounded-full mr-3" />
+            <Text className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+              PRUEBAS Y ACCIONES
+            </Text>
+          </View>
+
+          <View className="bg-white rounded-[28px] border border-slate-100 shadow-sm overflow-hidden mb-10">
+            <TouchableOpacity
+              onPress={handleTestNotification}
+              style={styles.borderBottom}
+              className="flex-row items-center px-6 py-5"
+            >
+              <View className="w-10 h-10 rounded-xl bg-blue-50 items-center justify-center mr-4">
+                <Bell size={20} color="#2563eb" />
+              </View>
+              <View>
+                <Text className="text-slate-700 font-bold">
+                  Enviar notificación de prueba
+                </Text>
+                <Text className="text-slate-400 text-xs">
+                  Comprueba cómo se ven las alertas
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleResetData}
+              className="flex-row items-center px-6 py-5"
+            >
+              <View className="w-10 h-10 rounded-xl bg-red-50 items-center justify-center mr-4">
+                <Trash2 size={20} color="#ef4444" />
+              </View>
+              <View>
+                <Text className="text-red-600 font-bold">
+                  Eliminar todos los datos
+                </Text>
+                <Text className="text-slate-400 text-xs text-red-300">
+                  Borra todos los productos y el historial
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          <View className="flex-row items-center mb-5 px-1">
             <View className="w-1.5 h-5 bg-orange-400 rounded-full mr-3" />
             <Text className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
               APOYO AL DESARROLLADOR
@@ -116,7 +204,7 @@ export default function SettingsScreen({ navigation }: any) {
             </Text>
           </View>
 
-          <View className="bg-white rounded-[28px] border border-slate-100 shadow-sm p-7">
+          <View className="bg-white rounded-[28px] border border-slate-100 shadow-sm p-7 mb-10">
             <View className="flex-row items-center mb-5">
               <View className="w-8 h-8 rounded-lg bg-slate-50 items-center justify-center mr-4">
                 <Info size={16} color="#94a3b8" />
