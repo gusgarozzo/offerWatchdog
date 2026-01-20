@@ -13,6 +13,7 @@ interface ProductState {
   addHistoryEntry: (entry: HistoryEntry) => void;
   setCheckInterval: (interval: number) => void;
   clearHistory: (productId: string) => void;
+  clearProducts: () => void;
 }
 
 export const useProductStore = create<ProductState>()(
@@ -41,6 +42,7 @@ export const useProductStore = create<ProductState>()(
         set((state) => ({
           history: state.history.filter((h) => h.productId !== productId),
         })),
+      clearProducts: () => set(() => ({ products: [], history: [] })),
     }),
     {
       name: "product-storage",
