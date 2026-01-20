@@ -10,6 +10,7 @@ import {
   StatusBar as RNStatusBar,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useProductStore } from "../hooks/useProductStore";
@@ -70,8 +71,25 @@ export default function HomeScreen({ navigation }: any) {
   };
 
   const handleRefreshAll = async () => {
+    const { manualCheckTimestamps, recordManualCheck } =
+      useProductStore.getState();
+    const now = Date.now();
+    const oneHourAgo = now - 60 * 60 * 1000;
+    const checksInLastHour = manualCheckTimestamps.filter(
+      (t) => t > oneHourAgo,
+    ).length;
+
+    if (checksInLastHour >= 5) {
+      Alert.alert(
+        "Límite alcanzado",
+        "Has alcanzado el límite de 5 verificaciones manuales por hora. Por favor, espera un momento o deja que la app lo haga automáticamente.",
+      );
+      return;
+    }
+
     setIsRefreshing(true);
     try {
+      recordManualCheck();
       for (const product of products) {
         const info = await scraper.scrape(product.url);
 
@@ -228,8 +246,22 @@ export default function HomeScreen({ navigation }: any) {
             </View>
             <TouchableOpacity
               onPress={handleRefreshAll}
-              disabled={isRefreshing}
-              style={styles.refreshBtn}
+              disabled={
+                isRefreshing ||
+                useProductStore
+                  .getState()
+                  .manualCheckTimestamps.filter((t) => t > Date.now() - 3600000)
+                  .length >= 5
+              }
+              style={[
+                styles.refreshBtn,
+                (isRefreshing ||
+                  useProductStore
+                    .getState()
+                    .manualCheckTimestamps.filter(
+                      (t) => t > Date.now() - 3600000,
+                    ).length >= 5) && { opacity: 0.5 },
+              ]}
               className="flex-row items-center bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm"
             >
               {isRefreshing ? (
@@ -239,9 +271,31 @@ export default function HomeScreen({ navigation }: any) {
                   className="mr-2"
                 />
               ) : (
-                <RefreshCw size={12} color="#2563eb" className="mr-2" />
+                <RefreshCw
+                  size={12}
+                  color={
+                    useProductStore
+                      .getState()
+                      .manualCheckTimestamps.filter(
+                        (t) => t > Date.now() - 3600000,
+                      ).length >= 5
+                      ? "#94a3b8"
+                      : "#2563eb"
+                  }
+                  className="mr-2"
+                />
               )}
-              <Text className="text-primary font-black text-[9px] tracking-wider uppercase">
+              <Text
+                className={`${
+                  useProductStore
+                    .getState()
+                    .manualCheckTimestamps.filter(
+                      (t) => t > Date.now() - 3600000,
+                    ).length >= 5
+                    ? "text-slate-400"
+                    : "text-primary"
+                } font-black text-[9px] tracking-wider uppercase`}
+              >
                 Actualizar
               </Text>
             </TouchableOpacity>

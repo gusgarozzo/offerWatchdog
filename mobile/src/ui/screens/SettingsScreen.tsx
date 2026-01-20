@@ -20,19 +20,9 @@ import {
 } from "lucide-react-native";
 import * as Notifications from "expo-notifications";
 
-const INTERVALS = [
-  { label: "1 minuto", value: 1 },
-  { label: "5 minutos", value: 5 },
-  { label: "15 minutos", value: 15 },
-  { label: "30 minutos", value: 30 },
-  { label: "1 hora", value: 60 },
-  { label: "12 horas", value: 720 },
-  { label: "24 horas", value: 1440 },
-];
-
 export default function SettingsScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { checkInterval, setCheckInterval, clearProducts } = useProductStore();
+  const { clearProducts } = useProductStore();
 
   const handleDonate = () => {
     Linking.openURL("https://cafecito.app/gusdev");
@@ -105,27 +95,24 @@ export default function SettingsScreen({ navigation }: any) {
             </Text>
           </View>
 
-          <View className="bg-white rounded-[28px] border border-slate-100 shadow-sm overflow-hidden mb-10">
-            {INTERVALS.map((interval, index) => (
-              <TouchableOpacity
-                key={interval.value}
-                onPress={() => setCheckInterval(interval.value)}
-                style={[
-                  styles.intervalOption,
-                  index !== INTERVALS.length - 1 && styles.borderBottom,
-                ]}
-                className="flex-row items-center justify-between px-6 py-4.5"
-              >
-                <Text
-                  className={`${checkInterval === interval.value ? "text-primary font-bold" : "text-slate-600"}`}
-                >
-                  {interval.label}
+          <View className="bg-white rounded-[28px] border border-slate-100 shadow-sm overflow-hidden mb-10 p-6">
+            <View className="flex-row items-center mb-3">
+              <View className="w-10 h-10 rounded-xl bg-primary/10 items-center justify-center mr-4">
+                <Bell size={20} color="#2563eb" />
+              </View>
+              <View>
+                <Text className="text-slate-700 font-bold">1 hora (Fijo)</Text>
+                <Text className="text-primary font-medium text-xs">
+                  Intervalo óptimo activo
                 </Text>
-                {checkInterval === interval.value && (
-                  <View className="w-2.5 h-2.5 rounded-full bg-primary shadow-sm" />
-                )}
-              </TouchableOpacity>
-            ))}
+              </View>
+            </View>
+            <Text className="text-slate-500 text-xs leading-5">
+              Para garantizar la eficiencia de la batería y la confiabilidad del
+              servicio, el intervalo de monitoreo automático está fijado en una
+              hora. Puedes realizar hasta 5 verificaciones manuales por hora
+              desde el panel principal.
+            </Text>
           </View>
 
           <View className="flex-row items-center mb-5 px-1">

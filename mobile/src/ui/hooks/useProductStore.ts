@@ -7,6 +7,7 @@ interface ProductState {
   products: Product[];
   history: HistoryEntry[];
   checkInterval: number; // in minutes
+  manualCheckTimestamps: number[];
   addProduct: (product: Product) => void;
   removeProduct: (id: string) => void;
   updateProduct: (id: string, updates: Partial<Product>) => void;
@@ -14,14 +15,16 @@ interface ProductState {
   setCheckInterval: (interval: number) => void;
   clearHistory: (productId: string) => void;
   clearProducts: () => void;
+  recordManualCheck: () => void;
 }
 
 export const useProductStore = create<ProductState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       products: [],
       history: [],
       checkInterval: 60, // Default 1 hour
+      manualCheckTimestamps: [],
       addProduct: (product) =>
         set((state) => ({ products: [...state.products, product] })),
       removeProduct: (id) =>
@@ -43,6 +46,16 @@ export const useProductStore = create<ProductState>()(
           history: state.history.filter((h) => h.productId !== productId),
         })),
       clearProducts: () => set(() => ({ products: [], history: [] })),
+      recordManualCheck: () => {
+        const now = Date.now();
+        const oneHourAgo = now - 60 * 60 * 1000;
+        set((state) => ({
+          manualCheckTimestamps: [
+            ...state.manualCheckTimestamps.filter((t) => t > oneHourAgo),
+            now,
+          ],
+        }));
+      },
     }),
     {
       name: "product-storage",
