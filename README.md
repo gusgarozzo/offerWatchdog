@@ -37,8 +37,8 @@
 
 ---
 
-
 ### 🆕 Mejora: Formulario desplegable
+
 (2025-06-19)
 A partir de la versión actual, la sección para agregar productos fue optimizada para mejorar la experiencia de usuario:
 
@@ -46,6 +46,16 @@ A partir de la versión actual, la sección para agregar productos fue optimizad
 - Se puede desplegar fácilmente haciendo clic en la fila **"Agregar producto ▼"**.
 - Esto permite una vista más limpia cuando solo se desea revisar los productos monitoreados, sin agregar nuevos.
 
+---
+
+## 📱 Versión Mobile (Expo App)
+
+Offer Watchdog ahora cuenta con una aplicación móvil nativa para que puedas llevar tus monitoreos a todos lados.
+
+- **Ubicación**: Carpeta `mobile/`
+- **Setup**: Consulta el [README en mobile/](mobile/README.md) para ver las instrucciones de instalación y prueba.
+
+---
 
 ## 🤝 Contribución
 
