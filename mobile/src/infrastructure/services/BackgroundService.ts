@@ -5,83 +5,14 @@ import { useProductStore } from "../../ui/hooks/useProductStore";
 import { ScraperService } from "./ScraperService";
 import Constants from "expo-constants";
 
-const BACKGROUND_FETCH_TASK = "background-product-check";
-const scraper = new ScraperService();
+import { SyncService } from "./SyncService";
 
-// Define task (always define it, but execution depends on platform)
+const BACKGROUND_FETCH_TASK = "background-product-check";
+
+// Define task
 TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
   try {
-    const { products, updateProduct, addHistoryEntry } =
-      useProductStore.getState();
-
-    for (const product of products) {
-      const info = await scraper.scrape(product.url);
-
-      if (info.price !== null && info.price !== product.price) {
-        const oldPrice = product.price;
-        updateProduct(product.id, {
-          price: info.price,
-          lastChecked: Date.now(),
-        });
-
-        addHistoryEntry({
-          id: Date.now().toString(),
-          productId: product.id,
-          timestamp: Date.now(),
-          type: "price",
-          oldValue: oldPrice,
-          newValue: info.price,
-        });
-
-        // Local notification (only if possible)
-        try {
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: "¡Cambio de precio!",
-              body: `${product.name} cambió de $${oldPrice} a $${info.price}`,
-              data: { productId: product.id },
-            },
-            trigger: null,
-          });
-        } catch (e) {
-          // Ignore notification failures in Expo Go
-        }
-      }
-
-      if (
-        info.availability !== null &&
-        info.availability !== product.availability
-      ) {
-        const oldAvailability = product.availability;
-        updateProduct(product.id, {
-          availability: info.availability,
-          lastChecked: Date.now(),
-        });
-
-        addHistoryEntry({
-          id: (Date.now() + 1).toString(),
-          productId: product.id,
-          timestamp: Date.now(),
-          type: "availability",
-          oldValue: oldAvailability,
-          newValue: info.availability,
-        });
-
-        try {
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: "Cambio de stock",
-              body: `${product.name} ahora está ${info.availability}`,
-              data: { productId: product.id },
-            },
-            trigger: null,
-          });
-        } catch (e) {
-          // Ignore
-        }
-      }
-    }
-
+    await SyncService.checkAllProducts();
     return BackgroundFetch.BackgroundFetchResult.NewData;
   } catch (error) {
     console.error("Background fetch failed:", error);

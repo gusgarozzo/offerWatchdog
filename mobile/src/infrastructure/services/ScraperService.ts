@@ -44,7 +44,6 @@ export class ScraperService {
       for (const script of jsonLdElements) {
         try {
           const data = JSON.parse(script.text);
-          // Handle both single object and array of objects
           const objects = Array.isArray(data) ? data : [data];
 
           for (const obj of objects) {
@@ -52,24 +51,53 @@ export class ScraperService {
               obj["@type"] === "Product" ||
               obj["@type"]?.includes("Product")
             ) {
+              // Extraction from Offers
               if (obj.offers) {
                 const offer = Array.isArray(obj.offers)
                   ? obj.offers[0]
                   : obj.offers;
-                if (offer.price) {
+
+                if (offer.price && !price) {
                   price =
                     typeof offer.price === "string"
                       ? parseFloat(offer.price.replace(/[^0-9.]/g, ""))
                       : offer.price;
                 }
+
+                if (offer.availability && !availability) {
+                  const availValue = String(offer.availability).toLowerCase();
+                  if (availValue.includes("instock")) {
+                    availability = "In stock";
+                  } else if (availValue.includes("outofstock")) {
+                    availability = "Out of stock";
+                  }
+                }
               }
               if (obj.name && !title) title = obj.name;
-              if (price) break;
             }
           }
-          if (price) break;
+          if (price && availability && title) break;
         } catch (e) {
-          // Ignore parse errors for individual scripts
+          // Ignore parse errors
+        }
+      }
+
+      // 2. Meta Tags Availability
+      if (!availability) {
+        const availMeta =
+          root.querySelector('meta[property="og:availability"]') ||
+          root.querySelector('meta[name="availability"]');
+        if (availMeta) {
+          const content =
+            availMeta.getAttribute("content")?.toLowerCase() || "";
+          if (content.includes("instock") || content.includes("available")) {
+            availability = "In stock";
+          } else if (
+            content.includes("oos") ||
+            content.includes("out of stock")
+          ) {
+            availability = "Out of stock";
+          }
         }
       }
 
@@ -81,7 +109,6 @@ export class ScraperService {
             let rawPrice: string | undefined;
 
             if (selector === ".a-price-whole") {
-              // Special handling for Amazon: whole + fraction
               const fraction = root.querySelector(".a-price-fraction");
               rawPrice = element.text + (fraction ? "." + fraction.text : "");
             } else if (selector.startsWith("meta")) {
@@ -92,29 +119,19 @@ export class ScraperService {
 
             if (rawPrice) {
               let cleanedPrice = rawPrice.replace(/[^0-9.,]/g, "").trim();
-              if (!cleanedPrice) {
-                // Try next selector if this one gave us an empty string after cleaning
-                continue;
-              }
+              if (!cleanedPrice) continue;
 
-              // Handle European/Latin American format (dots for thousands, comma for decimal)
-              // or American format (commas for thousands, dot for decimal)
               if (cleanedPrice.includes(".") && cleanedPrice.includes(",")) {
                 if (
                   cleanedPrice.lastIndexOf(".") > cleanedPrice.lastIndexOf(",")
                 ) {
-                  // Thousands: , Decimal: . (1,234.56)
                   cleanedPrice = cleanedPrice.replace(/,/g, "");
                 } else {
-                  // Thousands: . Decimal: , (1.234,56)
                   cleanedPrice = cleanedPrice
                     .replace(/\./g, "")
                     .replace(",", ".");
                 }
               } else if (cleanedPrice.includes(",")) {
-                // Assume comma is decimal if only one comma exists and no dot
-                // Note: This can be ambiguous for thousands separator in some locales,
-                // but for prices it usually works better as decimal.
                 cleanedPrice = cleanedPrice.replace(",", ".");
               }
 
@@ -128,49 +145,94 @@ export class ScraperService {
         }
       }
 
-      // Title selectors (including Amazon)
+      // Title selectors
       const titleSelectors = [
-        "#productTitle", // Amazon
+        "#productTitle",
         'meta[property="og:title"]',
         "h1",
         ".ui-pdp-title",
         '[itemprop="name"]',
       ];
 
-      for (const selector of titleSelectors) {
-        const element = root.querySelector(selector);
-        if (element) {
-          if (selector.startsWith("meta")) {
-            title = element.getAttribute("content") || null;
-          } else {
-            title = element.text.trim() || null;
+      if (!title) {
+        for (const selector of titleSelectors) {
+          const element = root.querySelector(selector);
+          if (element) {
+            if (selector.startsWith("meta")) {
+              title = element.getAttribute("content") || null;
+            } else {
+              title = element.text.trim() || null;
+            }
+            if (title) break;
           }
-          if (title) break;
         }
       }
 
-      // Availability (Simplified keywords)
-      const inStockKeywords = [
-        "in stock",
-        "disponible",
-        "en stock",
-        "stock disponible",
-        "hay stock",
-      ];
-      const outOfStockKeywords = [
-        "out of stock",
-        "agotado",
-        "sin stock",
-        "no disponible",
-        "sold out",
-      ];
+      // 3. Specific Availability Selectors
+      if (!availability) {
+        const stockSelectors = [
+          "#availability", // Amazon
+          "#add-to-cart-button", // Amazon indicator
+          ".ui-pdp-stock-information__title", // ML Catalog
+          ".ui-pdp-buybox__quantity__available",
+          ".stock-status",
+          ".out-of-stock",
+          "#outOfStock",
+        ];
 
-      const bodyText = root.text.toLowerCase();
+        for (const selector of stockSelectors) {
+          const element = root.querySelector(selector);
+          if (element) {
+            if (selector === "#add-to-cart-button") {
+              availability = "In stock";
+              break;
+            }
 
-      if (outOfStockKeywords.some((kw) => bodyText.includes(kw))) {
-        availability = "Out of stock";
-      } else if (inStockKeywords.some((kw) => bodyText.includes(kw))) {
-        availability = "In stock";
+            const text = element.text.toLowerCase();
+            if (
+              text.includes("disponible") ||
+              text.includes("in stock") ||
+              text.includes("disponibles")
+            ) {
+              availability = "In stock";
+              break;
+            } else if (
+              text.includes("agotado") ||
+              text.includes("out of stock") ||
+              text.includes("sin stock") ||
+              text.includes("no disponible") ||
+              text.includes("unavailable")
+            ) {
+              availability = "Out of stock";
+              break;
+            }
+          }
+        }
+      }
+
+      // 4. Fallback Keyword Search (Last resort, refined)
+      if (!availability) {
+        const bodyText = root.text.toLowerCase();
+
+        // Check positive indicators first to avoid generic "no disponible" conflicts
+        const inStockKeywords = [
+          "stock disponible",
+          "hay stock",
+          "en stock",
+          "disponible",
+        ];
+        const outOfStockKeywords = [
+          "agotado",
+          "no disponible",
+          "sin stock",
+          "out of stock",
+        ];
+
+        if (inStockKeywords.some((kw) => bodyText.includes(kw))) {
+          availability = "In stock";
+        } else if (outOfStockKeywords.some((kw) => bodyText.includes(kw))) {
+          availability = "Out of stock";
+        }
       }
 
       return { title, price, availability };
