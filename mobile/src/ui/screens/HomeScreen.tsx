@@ -24,20 +24,39 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react-native";
 import { ScraperService } from "../../infrastructure/services/ScraperService";
+import { SubscriptionService } from "../../core/services/SubscriptionService";
 
 const scraper = new ScraperService();
 
 export default function HomeScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { products, addProduct, updateProduct, addHistoryEntry } =
-    useProductStore();
+  const {
+    products,
+    addProduct,
+    updateProduct,
+    addHistoryEntry,
+    userPlan,
+    manualCheckTimestamps,
+    recordManualCheck,
+    checkInterval,
+  } = useProductStore();
   const [isFormExpanded, setIsFormExpanded] = useState(false);
   const [url, setUrl] = useState("");
   const [name, setName] = useState("");
   const [isScraping, setIsScraping] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Adjusted padding for safe area
+  const limits = SubscriptionService.getLimits(userPlan, checkInterval);
+  const now = Date.now();
+  const oneHourAgo = now - 60 * 60 * 1000;
+  const checksInLastHour = manualCheckTimestamps.filter(
+    (t) => t > oneHourAgo,
+  ).length;
+  const isAutomaticBlocked =
+    userPlan === "FREE" &&
+    useProductStore.getState().lastAutoCheckTimestamp >
+      Date.now() - 6 * 3600000;
+
   const topPadding =
     Platform.OS === "android"
       ? (RNStatusBar.currentHeight || 0) + 10
@@ -45,6 +64,22 @@ export default function HomeScreen({ navigation }: any) {
 
   const handleAddProduct = async () => {
     if (!url) return;
+
+    if (!SubscriptionService.canAddProduct(products.length, userPlan)) {
+      Alert.alert(
+        "Límite alcanzado",
+        `Tu plan ${userPlan} permite hasta ${limits.maxProducts} productos. ¡Pásate a Premium para monitorear hasta 10!`,
+        [
+          { text: "Después" },
+          {
+            text: "Ver Planes",
+            onPress: () => navigation.navigate("Settings"),
+          },
+        ],
+      );
+      return;
+    }
+
     setIsScraping(true);
     try {
       const info = await scraper.scrape(url);
@@ -71,18 +106,19 @@ export default function HomeScreen({ navigation }: any) {
   };
 
   const handleRefreshAll = async () => {
-    const { manualCheckTimestamps, recordManualCheck } =
-      useProductStore.getState();
-    const now = Date.now();
-    const oneHourAgo = now - 60 * 60 * 1000;
-    const checksInLastHour = manualCheckTimestamps.filter(
-      (t) => t > oneHourAgo,
-    ).length;
-
-    if (checksInLastHour >= 5) {
+    if (
+      !SubscriptionService.canPerformManualCheck(checksInLastHour, userPlan)
+    ) {
       Alert.alert(
-        "Límite alcanzado",
-        "Has alcanzado el límite de 5 verificaciones manuales por hora. Por favor, espera un momento o deja que la app lo haga automáticamente.",
+        "Límite de actualización",
+        `Has alcanzado el límite de ${limits.manualChecksPerHour} verificación manual por hora en el plan ${userPlan}.`,
+        [
+          { text: "Entendido" },
+          {
+            text: "Mejorar Plan",
+            onPress: () => navigation.navigate("Settings"),
+          },
+        ],
       );
       return;
     }
@@ -129,12 +165,23 @@ export default function HomeScreen({ navigation }: any) {
           className="px-6 py-5 flex-row justify-between items-center bg-white border-b border-slate-200"
         >
           <View>
-            <Text
-              style={styles.headerTitle}
-              className="text-primary font-black uppercase tracking-tighter"
-            >
-              Offer Watchdog
-            </Text>
+            <View className="flex-row items-center mb-1">
+              <Text
+                style={styles.headerTitle}
+                className="text-primary font-black uppercase tracking-tighter mr-2"
+              >
+                Offer Watchdog
+              </Text>
+              <View
+                className={`px-2 py-0.5 rounded-full ${userPlan === "FREE" ? "bg-slate-100" : "bg-amber-100"}`}
+              >
+                <Text
+                  className={`text-[9px] font-black uppercase ${userPlan === "FREE" ? "text-slate-500" : "text-amber-600"}`}
+                >
+                  {userPlan}
+                </Text>
+              </View>
+            </View>
             <Text
               style={styles.headerSubtitle}
               className="text-slate-500 font-medium"
@@ -161,12 +208,19 @@ export default function HomeScreen({ navigation }: any) {
               <View className="w-10 h-10 rounded-xl bg-blue-50 items-center justify-center mr-4">
                 <Plus size={20} color="#2563eb" />
               </View>
-              <Text
-                style={styles.toggleText}
-                className="text-slate-700 font-bold"
-              >
-                Agregar nuevo producto
-              </Text>
+              <View>
+                <Text
+                  style={styles.toggleText}
+                  className="text-slate-700 font-bold"
+                >
+                  Agregar nuevo producto
+                </Text>
+                <Text className="text-[10px] text-slate-400 font-medium">
+                  {products.length} /{" "}
+                  {limits.maxProducts === Infinity ? "∞" : limits.maxProducts}{" "}
+                  usados
+                </Text>
+              </View>
             </View>
             {isFormExpanded ? (
               <ChevronUp size={20} color="#94a3b8" />
@@ -246,22 +300,8 @@ export default function HomeScreen({ navigation }: any) {
             </View>
             <TouchableOpacity
               onPress={handleRefreshAll}
-              disabled={
-                isRefreshing ||
-                useProductStore
-                  .getState()
-                  .manualCheckTimestamps.filter((t) => t > Date.now() - 3600000)
-                  .length >= 5
-              }
-              style={[
-                styles.refreshBtn,
-                (isRefreshing ||
-                  useProductStore
-                    .getState()
-                    .manualCheckTimestamps.filter(
-                      (t) => t > Date.now() - 3600000,
-                    ).length >= 5) && { opacity: 0.5 },
-              ]}
+              disabled={isRefreshing}
+              style={[styles.refreshBtn, isRefreshing && { opacity: 0.5 }]}
               className="flex-row items-center bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm"
             >
               {isRefreshing ? (
@@ -271,33 +311,16 @@ export default function HomeScreen({ navigation }: any) {
                   className="mr-2"
                 />
               ) : (
-                <RefreshCw
-                  size={12}
-                  color={
-                    useProductStore
-                      .getState()
-                      .manualCheckTimestamps.filter(
-                        (t) => t > Date.now() - 3600000,
-                      ).length >= 5
-                      ? "#94a3b8"
-                      : "#2563eb"
-                  }
-                  className="mr-2"
-                />
+                <RefreshCw size={12} color="#2563eb" className="mr-2" />
               )}
-              <Text
-                className={`${
-                  useProductStore
-                    .getState()
-                    .manualCheckTimestamps.filter(
-                      (t) => t > Date.now() - 3600000,
-                    ).length >= 5
-                    ? "text-slate-400"
-                    : "text-primary"
-                } font-black text-[9px] tracking-wider uppercase`}
-              >
-                Actualizar
-              </Text>
+              <View>
+                <Text className="text-primary font-black text-[9px] tracking-wider uppercase">
+                  Actualizar
+                </Text>
+                <Text className="text-[7px] text-slate-400 font-bold uppercase text-center">
+                  {limits.manualChecksPerHour - checksInLastHour} libres
+                </Text>
+              </View>
             </TouchableOpacity>
           </View>
 

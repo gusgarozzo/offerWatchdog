@@ -2,12 +2,19 @@ import { create } from "zustand";
 import { Product, HistoryEntry } from "../../core/entities/Product";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { persist, createJSONStorage } from "zustand/middleware";
+import {
+  SubscriptionService,
+  UserPlan,
+} from "../../core/services/SubscriptionService";
 
 interface ProductState {
   products: Product[];
   history: HistoryEntry[];
-  checkInterval: number; // in minutes
+  checkInterval: number; // in hours for Premium, default 6
   manualCheckTimestamps: number[];
+  lastAutoCheckTimestamp: number;
+  userPlan: UserPlan;
+
   addProduct: (product: Product) => void;
   removeProduct: (id: string) => void;
   updateProduct: (id: string, updates: Partial<Product>) => void;
@@ -16,6 +23,10 @@ interface ProductState {
   clearHistory: (productId: string) => void;
   clearProducts: () => void;
   recordManualCheck: () => void;
+
+  // Subscription Actions
+  syncSubscription: () => Promise<void>;
+  updateUserPlan: (plan: UserPlan) => void;
 }
 
 export const useProductStore = create<ProductState>()(
@@ -23,10 +34,17 @@ export const useProductStore = create<ProductState>()(
     (set, get) => ({
       products: [],
       history: [],
-      checkInterval: 60, // Default 1 hour
+      checkInterval: 6, // Default 6 hours
       manualCheckTimestamps: [],
-      addProduct: (product) =>
-        set((state) => ({ products: [...state.products, product] })),
+      lastAutoCheckTimestamp: 0,
+      userPlan: "FREE",
+
+      addProduct: (product) => {
+        const { products, userPlan } = get();
+        if (SubscriptionService.canAddProduct(products.length, userPlan)) {
+          set((state) => ({ products: [...state.products, product] }));
+        }
+      },
       removeProduct: (id) =>
         set((state) => ({
           products: state.products.filter((p) => p.id !== id),
@@ -56,10 +74,29 @@ export const useProductStore = create<ProductState>()(
           ],
         }));
       },
+
+      syncSubscription: async () => {
+        await SubscriptionService.syncWithStore();
+        const resolvedPlan = await SubscriptionService.resolvePlan();
+        set({ userPlan: resolvedPlan });
+      },
+      updateUserPlan: (plan) => set({ userPlan: plan }),
     }),
     {
       name: "product-storage",
       storage: createJSONStorage(() => AsyncStorage),
+      version: 1,
+      migrate: (persistedState: any, version: number) => {
+        if (
+          version === 0 &&
+          persistedState &&
+          (persistedState.checkInterval === 60 ||
+            persistedState.checkInterval === 1)
+        ) {
+          return { ...persistedState, checkInterval: 6 };
+        }
+        return persistedState;
+      },
     },
   ),
 );

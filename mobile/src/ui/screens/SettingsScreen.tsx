@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,56 +7,73 @@ import {
   ScrollView,
   Linking,
   Alert,
+  Switch,
+  ActivityIndicator,
+  Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useProductStore } from "../hooks/useProductStore";
 import {
   ChevronLeft,
-  Coffee,
   Info,
+  RefreshCw,
   Bell,
-  Globe,
   Trash2,
+  Globe,
+  CreditCard,
+  Clock,
 } from "lucide-react-native";
 import * as Notifications from "expo-notifications";
+import { SubscriptionService } from "../../core/services/SubscriptionService";
 
 export default function SettingsScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { clearProducts } = useProductStore();
+  const {
+    clearProducts,
+    userPlan,
+    checkInterval,
+    setCheckInterval,
+    syncSubscription,
+  } = useProductStore();
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  const handleDonate = () => {
-    Linking.openURL("https://cafecito.app/gusdev");
+  const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+      await syncSubscription();
+      Alert.alert(
+        "Sincronización",
+        "Tu plan ha sido actualizado desde la tienda.",
+      );
+    } catch (error) {
+      Alert.alert("Error", "No se pudo sincronizar con la tienda.");
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleTestNotification = async () => {
-    try {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "¡Prueba de Oferta!",
-          body: "Este es un ejemplo de cómo verás las alertas de precio.",
-          data: { productId: "test" },
-          sound: true,
-          priority: Notifications.AndroidNotificationPriority.HIGH,
-        },
-        trigger: null, // trigger immediately
-      });
-    } catch (error) {
-      Alert.alert("Error", "No se pudo enviar la notificación de prueba.");
-    }
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "¡Prueba exitosa! 🚀",
+        body: "Las notificaciones de Offer Watchdog están funcionando.",
+      },
+      trigger: null,
+    });
   };
 
   const handleResetData = () => {
     Alert.alert(
       "Borrar todo",
-      "¿Estás seguro de que deseas eliminar todos los productos monitoreados?",
+      "¿Estás seguro de que quieres borrar todos los productos y el historial? Esta acción no se puede deshacer.",
       [
         { text: "Cancelar", style: "cancel" },
         {
-          text: "Eliminar todo",
+          text: "Borrar todo",
           style: "destructive",
           onPress: () => {
             clearProducts();
-            navigation.goBack();
+            Alert.alert("Éxito", "Todos los datos han sido borrados.");
           },
         },
       ],
@@ -74,46 +91,149 @@ export default function SettingsScreen({ navigation }: any) {
       >
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          className="w-10 h-10 items-center justify-center rounded-xl bg-slate-50 border border-slate-100"
+          className="mr-4 w-10 h-10 items-center justify-center rounded-full bg-slate-50"
         >
-          <ChevronLeft color="#1e293b" size={20} />
+          <ChevronLeft size={24} color="#64748b" />
         </TouchableOpacity>
-        <Text
-          style={styles.headerTitle}
-          className="ml-4 text-slate-800 font-bold"
-        >
-          Configuración
+        <Text className="text-slate-800 text-xl font-black uppercase tracking-tight">
+          Ajustes
         </Text>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
         <View className="px-6 py-8">
+          {/* SUBSCRIPTION PLAN */}
           <View className="flex-row items-center mb-5 px-1">
-            <View className="w-1.5 h-5 bg-primary rounded-full mr-3" />
+            <View className="w-1.5 h-5 bg-amber-500 rounded-full mr-3" />
             <Text className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-              INTERVALO DE MONITOREO
+              TU PLAN
             </Text>
           </View>
 
           <View className="bg-white rounded-[28px] border border-slate-100 shadow-sm overflow-hidden mb-10 p-6">
-            <View className="flex-row items-center mb-3">
-              <View className="w-10 h-10 rounded-xl bg-primary/10 items-center justify-center mr-4">
-                <Bell size={20} color="#2563eb" />
+            <View className="flex-row items-center justify-between mb-6">
+              <View className="flex-row items-center">
+                <View
+                  className={`w-12 h-12 rounded-2xl ${userPlan === "FREE" ? "bg-slate-100" : "bg-amber-100"} items-center justify-center mr-4`}
+                >
+                  <CreditCard
+                    size={24}
+                    color={userPlan === "FREE" ? "#64748b" : "#d97706"}
+                  />
+                </View>
+                <View>
+                  <Text className="text-slate-800 font-black uppercase text-base">
+                    {userPlan}
+                  </Text>
+                  <Text className="text-slate-400 text-xs text-balance">
+                    Sincronizado vía{" "}
+                    {Platform.OS === "ios" ? "App Store" : "Google Play Store"}
+                  </Text>
+                </View>
               </View>
-              <View>
-                <Text className="text-slate-700 font-bold">1 hora (Fijo)</Text>
-                <Text className="text-primary font-medium text-xs">
-                  Intervalo óptimo activo
+              <TouchableOpacity
+                onPress={handleSync}
+                disabled={isSyncing}
+                className="bg-slate-50 px-3 py-2 rounded-xl flex-row items-center"
+              >
+                {isSyncing ? (
+                  <ActivityIndicator size="small" color="#64748b" />
+                ) : (
+                  <>
+                    <RefreshCw size={14} color="#64748b" className="mr-2" />
+                    <Text className="text-slate-500 font-bold text-[10px] uppercase">
+                      Sincronizar
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View className="bg-slate-50 rounded-2xl p-4">
+              <Text className="text-slate-500 text-[11px] font-bold uppercase mb-2">
+                Límites activos
+              </Text>
+              <View className="flex-row justify-between mb-2">
+                <Text className="text-slate-600 text-xs">Productos max.</Text>
+                <Text className="text-slate-900 font-bold text-xs">
+                  {SubscriptionService.getLimits(userPlan).maxProducts}
+                </Text>
+              </View>
+              <View className="flex-row justify-between mb-2">
+                <Text className="text-slate-600 text-xs">
+                  Actualizaciones auto.
+                </Text>
+                <Text className="text-slate-900 font-bold text-xs">
+                  Cada{" "}
+                  {
+                    SubscriptionService.getLimits(userPlan, checkInterval)
+                      .autoCheckIntervalHours
+                  }
+                  h
+                </Text>
+              </View>
+              <View className="flex-row justify-between">
+                <Text className="text-slate-600 text-xs">
+                  Actualizaciones manuales
+                </Text>
+                <Text className="text-slate-900 font-bold text-xs">
+                  {SubscriptionService.getLimits(userPlan).manualChecksPerHour}
+                  /hora
                 </Text>
               </View>
             </View>
-            <Text className="text-slate-500 text-xs leading-5">
-              Para garantizar la eficiencia de la batería y la confiabilidad del
-              servicio, el intervalo de monitoreo automático está fijado en una
-              hora. Puedes realizar hasta 5 verificaciones manuales por hora
-              desde el panel principal.
-            </Text>
+
+            {userPlan === "FREE" && (
+              <TouchableOpacity
+                className="mt-6 bg-amber-500 py-4 rounded-2xl items-center shadow-lg shadow-amber-500/30"
+                onPress={() =>
+                  Alert.alert("Premium", "Redirigiendo a la App Store...")
+                }
+              >
+                <Text className="text-white font-black uppercase tracking-widest text-xs">
+                  Pasar a Premium
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
+
+          {/* PREMIUM CONFIGURATION */}
+          {userPlan === "PREMIUM" && (
+            <>
+              <View className="flex-row items-center mb-5 px-1">
+                <View className="w-1.5 h-5 bg-blue-500 rounded-full mr-3" />
+                <Text className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+                  FRECUENCIA DE MONITOREO
+                </Text>
+              </View>
+
+              <View className="bg-white rounded-[28px] border border-slate-100 shadow-sm overflow-hidden mb-10 p-2">
+                {[1, 3, 6].map((h) => (
+                  <TouchableOpacity
+                    key={h}
+                    onPress={() => setCheckInterval(h)}
+                    className={`flex-row items-center justify-between px-6 py-4 rounded-[20px] ${checkInterval === h ? "bg-blue-50" : ""}`}
+                  >
+                    <View className="flex-row items-center">
+                      <Clock
+                        size={16}
+                        color={checkInterval === h ? "#2563eb" : "#94a3b8"}
+                        className="mr-3"
+                      />
+                      <Text
+                        className={`font-bold ${checkInterval === h ? "text-blue-700" : "text-slate-600"}`}
+                      >
+                        Cada {h} Hora{h > 1 ? "s" : ""}
+                      </Text>
+                    </View>
+                    {checkInterval === h && (
+                      <View className="w-2 h-2 rounded-full bg-blue-600" />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
+          )}
 
           <View className="flex-row items-center mb-5 px-1">
             <View className="w-1.5 h-5 bg-blue-400 rounded-full mr-3" />
@@ -160,31 +280,6 @@ export default function SettingsScreen({ navigation }: any) {
           </View>
 
           <View className="flex-row items-center mb-5 px-1">
-            <View className="w-1.5 h-5 bg-orange-400 rounded-full mr-3" />
-            <Text className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-              APOYO AL DESARROLLADOR
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            onPress={handleDonate}
-            style={styles.donateCard}
-            className="bg-primary p-6 rounded-[32px] flex-row items-center shadow-xl shadow-primary/30 mb-10"
-          >
-            <View className="w-14 h-14 bg-white/20 rounded-2xl items-center justify-center">
-              <Coffee color="white" size={28} />
-            </View>
-            <View className="ml-5 flex-1">
-              <Text className="text-white font-bold text-lg">
-                Invitame un cafecito
-              </Text>
-              <Text className="text-white/80 text-xs mt-1">
-                Ayudá a mantener el proyecto vivo
-              </Text>
-            </View>
-          </TouchableOpacity>
-
-          <View className="flex-row items-center mb-5 px-1">
             <View className="w-1.5 h-5 bg-slate-300 rounded-full mr-3" />
             <Text className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
               INFORMACIÓN
@@ -197,7 +292,7 @@ export default function SettingsScreen({ navigation }: any) {
                 <Info size={16} color="#94a3b8" />
               </View>
               <Text className="text-slate-600 font-medium">
-                Versión 1.0.0 (Expo SDK 54)
+                Versión 1.1.0 (Freemium Update)
               </Text>
             </View>
             <View className="flex-row items-center">
