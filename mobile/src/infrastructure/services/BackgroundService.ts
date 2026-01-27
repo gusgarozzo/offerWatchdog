@@ -6,20 +6,15 @@ import { ScraperService } from "./ScraperService";
 import { SubscriptionService } from "../../core/services/SubscriptionService";
 import Constants from "expo-constants";
 
+import { SyncService } from "./SyncService";
+
 const BACKGROUND_FETCH_TASK = "background-product-check";
-const scraper = new ScraperService();
 
 // Define task
 TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
   try {
-    const {
-      products,
-      updateProduct,
-      addHistoryEntry,
-      userPlan,
-      checkInterval,
-      lastAutoCheckTimestamp,
-    } = useProductStore.getState();
+    const { products, userPlan, checkInterval, lastAutoCheckTimestamp } =
+      useProductStore.getState();
 
     // 1. Plan Interval Check
     const limits = SubscriptionService.getLimits(userPlan, checkInterval);
@@ -36,74 +31,10 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
     if (products.length === 0)
       return BackgroundFetch.BackgroundFetchResult.NoData;
 
-    for (const product of products) {
-      const info = await scraper.scrape(product.url);
+    // 2. Perform sync using SyncService
+    await SyncService.checkAllProducts();
 
-      if (info.price !== null && info.price !== product.price) {
-        const oldPrice = product.price;
-        updateProduct(product.id, {
-          price: info.price,
-          lastChecked: Date.now(),
-        });
-
-        addHistoryEntry({
-          id: Date.now().toString(),
-          productId: product.id,
-          timestamp: Date.now(),
-          type: "price",
-          oldValue: oldPrice,
-          newValue: info.price,
-        });
-
-        try {
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: "¡Cambio de precio!",
-              body: `${product.name} cambió de $${oldPrice} a $${info.price}`,
-              data: { productId: product.id },
-            },
-            trigger: null,
-          });
-        } catch (e) {
-          // Ignore
-        }
-      }
-
-      if (
-        info.availability !== null &&
-        info.availability !== product.availability
-      ) {
-        const oldAvailability = product.availability;
-        updateProduct(product.id, {
-          availability: info.availability,
-          lastChecked: Date.now(),
-        });
-
-        addHistoryEntry({
-          id: (Date.now() + 1).toString(),
-          productId: product.id,
-          timestamp: Date.now(),
-          type: "availability",
-          oldValue: oldAvailability,
-          newValue: info.availability,
-        });
-
-        try {
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: "Cambio de stock",
-              body: `${product.name} ahora está ${info.availability}`,
-              data: { productId: product.id },
-            },
-            trigger: null,
-          });
-        } catch (e) {
-          // Ignore
-        }
-      }
-    }
-
-    // Update the last auto check timestamp
+    // 3. Update the last auto check timestamp
     useProductStore.setState({ lastAutoCheckTimestamp: Date.now() });
 
     return BackgroundFetch.BackgroundFetchResult.NewData;

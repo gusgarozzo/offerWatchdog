@@ -10,7 +10,7 @@ import {
 interface ProductState {
   products: Product[];
   history: HistoryEntry[];
-  checkInterval: number; // in hours for Premium, default 1
+  checkInterval: number; // in hours for Premium, default 6
   manualCheckTimestamps: number[];
   lastAutoCheckTimestamp: number;
   userPlan: UserPlan;
@@ -34,7 +34,7 @@ export const useProductStore = create<ProductState>()(
     (set, get) => ({
       products: [],
       history: [],
-      checkInterval: 1, // Default 1 hour for Premium
+      checkInterval: 6, // Default 6 hours
       manualCheckTimestamps: [],
       lastAutoCheckTimestamp: 0,
       userPlan: "FREE",
@@ -85,6 +85,18 @@ export const useProductStore = create<ProductState>()(
     {
       name: "product-storage",
       storage: createJSONStorage(() => AsyncStorage),
+      version: 1,
+      migrate: (persistedState: any, version: number) => {
+        if (
+          version === 0 &&
+          persistedState &&
+          (persistedState.checkInterval === 60 ||
+            persistedState.checkInterval === 1)
+        ) {
+          return { ...persistedState, checkInterval: 6 };
+        }
+        return persistedState;
+      },
     },
   ),
 );

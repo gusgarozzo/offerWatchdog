@@ -33,18 +33,18 @@ export const ProductCard = ({ product, onPress }: ProductCardProps) => {
     >
       <View
         style={styles.imageContainer}
-        className="bg-slate-50 items-center justify-center border-r border-slate-50"
+        className="bg-white items-center justify-center border-r border-slate-50"
       >
         {product.image ? (
           <Image source={{ uri: product.image }} style={styles.image} />
         ) : (
-          <View className="bg-primary/5 w-12 h-12 rounded-xl items-center justify-center">
-            <Package size={24} color="#2563eb" />
+          <View className="bg-slate-50 w-full h-full items-center justify-center">
+            <Package size={32} color="#94a3b8" strokeWidth={1.5} />
           </View>
         )}
       </View>
 
-      <View style={styles.infoContainer} className="flex-1 p-5">
+      <View style={styles.infoContainer} className="flex-1 p-4">
         <View className="flex-row justify-between items-start mb-1">
           <Text
             numberOfLines={1}
@@ -108,15 +108,17 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
   },
   imageContainer: {
-    width: 95,
+    width: 100,
+    height: 100,
+    padding: 8,
   },
   image: {
     width: "100%",
     height: "100%",
-    resizeMode: "cover",
+    resizeMode: "contain",
   },
   infoContainer: {
-    minHeight: 120,
+    minHeight: 100,
   },
   name: {
     fontSize: 16,
@@ -127,7 +129,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   price: {
-    fontSize: 18,
+    fontSize: 16,
   },
   badge: {
     paddingHorizontal: 10,
@@ -135,7 +137,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   badgeText: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: "900",
     textTransform: "uppercase",
     letterSpacing: 0.5,

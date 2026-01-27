@@ -7,6 +7,7 @@ import { View, LogBox } from "react-native";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import { registerBackgroundFetchAsync } from "./src/infrastructure/services/BackgroundService";
+import { SyncService } from "./src/infrastructure/services/SyncService";
 import { SubscriptionService } from "./src/core/services/SubscriptionService";
 import { MockSubscriptionProvider } from "./src/infrastructure/providers/MockSubscriptionProvider";
 import { NativeSubscriptionProvider } from "./src/infrastructure/providers/NativeSubscriptionProvider";
@@ -25,7 +26,7 @@ LogBox.ignoreLogs([
   "Background Fetch functionality is not available in Expo Go",
 ]);
 
-// Configure notifications handler (wrapped for safety)
+// Configure notifications handler
 try {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -41,6 +42,8 @@ try {
 }
 
 export default function App() {
+  const checkInterval = useProductStore((state) => state.checkInterval);
+
   useEffect(() => {
     const init = async () => {
       // Resolve initial plan
@@ -51,25 +54,33 @@ export default function App() {
         try {
           await registerBackgroundFetchAsync();
         } catch (e) {
-          console.log(
-            "Background fetch registration failed (expected in Expo Go)",
-          );
+          console.log("Background fetch registration failed");
         }
       }
 
+      // Initial check on load
+      await SyncService.checkAllProducts();
+
       // Request permissions
       try {
-        const { status } = await Notifications.requestPermissionsAsync();
-        if (status !== "granted") {
-          console.warn("Notification permissions not granted");
-        }
+        await Notifications.requestPermissionsAsync();
       } catch (e) {
-        // Silently skip if push isn't available
+        // Silently skip
       }
     };
 
     init();
-  }, []);
+
+    const interval = setInterval(
+      async () => {
+        console.log("[App] Triggering foreground sync...");
+        await SyncService.checkAllProducts();
+      },
+      checkInterval * 60 * 60 * 1000,
+    );
+
+    return () => clearInterval(interval);
+  }, [checkInterval]);
 
   return (
     <SafeAreaProvider>

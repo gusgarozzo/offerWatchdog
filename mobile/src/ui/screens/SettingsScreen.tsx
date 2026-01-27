@@ -9,12 +9,12 @@ import {
   Alert,
   Switch,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useProductStore } from "../hooks/useProductStore";
 import {
   ChevronLeft,
-  Coffee,
   Info,
   RefreshCw,
   Bell,
@@ -36,10 +36,6 @@ export default function SettingsScreen({ navigation }: any) {
     syncSubscription,
   } = useProductStore();
   const [isSyncing, setIsSyncing] = useState(false);
-
-  const handleDonate = () => {
-    Linking.openURL("https://cafecito.app/gusdev");
-  };
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -130,7 +126,8 @@ export default function SettingsScreen({ navigation }: any) {
                     {userPlan}
                   </Text>
                   <Text className="text-slate-400 text-xs text-balance">
-                    Sincronizado vía App Store
+                    Sincronizado vía{" "}
+                    {Platform.OS === "ios" ? "App Store" : "Google Play Store"}
                   </Text>
                 </View>
               </View>
@@ -281,31 +278,6 @@ export default function SettingsScreen({ navigation }: any) {
               </View>
             </TouchableOpacity>
           </View>
-
-          <View className="flex-row items-center mb-5 px-1">
-            <View className="w-1.5 h-5 bg-orange-400 rounded-full mr-3" />
-            <Text className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-              APOYO AL DESARROLLADOR
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            onPress={handleDonate}
-            style={styles.donateCard}
-            className="bg-primary p-6 rounded-[32px] flex-row items-center shadow-xl shadow-primary/30 mb-10"
-          >
-            <View className="w-14 h-14 bg-white/20 rounded-2xl items-center justify-center">
-              <Coffee color="white" size={28} />
-            </View>
-            <View className="ml-5 flex-1">
-              <Text className="text-white font-bold text-lg">
-                Invitame un cafecito
-              </Text>
-              <Text className="text-white/80 text-xs mt-1">
-                Ayudá a mantener el proyecto vivo
-              </Text>
-            </View>
-          </TouchableOpacity>
 
           <View className="flex-row items-center mb-5 px-1">
             <View className="w-1.5 h-5 bg-slate-300 rounded-full mr-3" />

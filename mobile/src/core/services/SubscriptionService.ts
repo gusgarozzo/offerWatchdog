@@ -16,7 +16,7 @@ export const PLAN_LIMITS: Record<UserPlan, PlanLimits> = {
   },
   PREMIUM: {
     maxProducts: 10,
-    autoCheckIntervalHours: 1, // Default, can be 1, 3, 6
+    autoCheckIntervalHours: 6, // Default, can be 1, 3, 6
     manualChecksPerHour: 5,
   },
 };
