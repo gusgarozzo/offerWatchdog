@@ -22,6 +22,7 @@ import {
   Globe,
   CreditCard,
   Clock,
+  Code,
 } from "lucide-react-native";
 import * as Notifications from "expo-notifications";
 import { SubscriptionService } from "../../core/services/SubscriptionService";
@@ -303,6 +304,28 @@ export default function SettingsScreen({ navigation }: any) {
                 Offer Watchdog Mobile App
               </Text>
             </View>
+          </View>
+
+          {/* DEVELOPER SIGNATURE - BARKING DOGS */}
+          <View className="mt-6 mb-12 items-center justify-center">
+            <TouchableOpacity
+              onPress={() => Linking.openURL("http://barkingdogs.work/")}
+              activeOpacity={0.7}
+              className="items-center"
+            >
+              <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">
+                Design & Code by
+              </Text>
+              <View className="flex-row items-baseline">
+                <Text className="text-slate-800 text-xl font-black italic tracking-tighter">
+                  BARKING
+                </Text>
+                <Text className="text-amber-500 text-xl font-black italic tracking-tighter ml-1">
+                  DOGS
+                </Text>
+                <View className="bg-slate-800 rounded-full w-1.5 h-1.5 ml-1 mb-1" />
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
